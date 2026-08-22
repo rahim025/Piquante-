@@ -42,12 +42,12 @@ app.post("/api/chat", async (req, res) => {
       year: "numeric",
       month: "long",
       day: "numeric",
-      timeZone: "Europe/Paris",
+      timeZone: "Africa/Porto-Novo",
     });
     const timeLabel = now.toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "Europe/Paris",
+      timeZone: "Africa/Porto-Novo",
     });
 
     const response = await fetch(url, {
@@ -60,7 +60,7 @@ app.post("/api/chat", async (req, res) => {
             {
               text:
                 `Tu es un assistant IA utile, chaleureux et clair, qui répond aux visiteurs d'un site web. Réponds dans la langue du visiteur. Sois concis mais complet. ` +
-                `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure de Paris). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais.`,
+                `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure du Bénin, UTC+1). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais.`,
             },
           ],
         },
