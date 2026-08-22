@@ -8,8 +8,14 @@ const googleTTS = require("google-tts-api");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
-const GEMINI_MODEL = "gemini-3.6-flash";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
+
+// Groq est utilisé pour tout le texte (chat + contenu des PDF) : gratuit et sans
+// la limite qui posait problème avec Gemini. Seule la génération d'images reste
+// sur Gemini, car Groq ne sait pas générer d'images.
+const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
+const GROQ_MODEL = "openai/gpt-oss-20b";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -83,13 +89,6 @@ function detectIntent(message) {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({
-        error:
-          "Aucune clé API n'est configurée sur le serveur. Ajoute GEMINI_API_KEY dans les variables d'environnement.",
-      });
-    }
-
     const { message, sessionId } = req.body || {};
     if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({ error: "Message vide." });
@@ -171,40 +170,82 @@ async function callGeminiWithRetry(url, body, { retries = 2, baseDelay = 2000 } 
   return { response: lastResponse, data: lastData };
 }
 
+// Calls Groq's OpenAI-compatible chat completions endpoint, retrying on
+// rate limits (429) or temporary server errors (5xx).
+async function callGroqWithRetry(messages, { retries = 2, baseDelay = 2000 } = {}) {
+  let lastResponse, lastData;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages,
+        temperature: 0.7,
+        max_tokens: 800,
+      }),
+    });
+    const data = await response.json();
+
+    if (response.ok) return { response, data };
+
+    lastResponse = response;
+    lastData = data;
+
+    const retryable = response.status === 429 || response.status >= 500;
+    if (!retryable || attempt === retries) break;
+
+    await sleep(baseDelay * (attempt + 1));
+  }
+  return { response: lastResponse, data: lastData };
+}
+
+// Converts our Gemini-style history ({role, parts:[{text}]}) into the
+// OpenAI-style messages array Groq expects ({role, content}).
+function historyToGroqMessages(history, systemText) {
+  const messages = [{ role: "system", content: systemText }];
+  for (const turn of history) {
+    messages.push({
+      role: turn.role === "model" ? "assistant" : "user",
+      content: (turn.parts || []).map((p) => p.text).join(""),
+    });
+  }
+  return messages;
+}
+
 async function handleTextRequest(message, history, res, sid) {
   history.push({ role: "user", parts: [{ text: message }] });
   while (history.length > MAX_TURNS * 2) history.shift();
 
+  if (!GROQ_API_KEY) {
+    const reply =
+      "Aucune clé API n'est configurée sur le serveur. Ajoute GROQ_API_KEY dans les variables d'environnement de Render.";
+    history.push({ role: "model", parts: [{ text: reply }] });
+    return res.json({ type: "text", reply });
+  }
+
   const { todayLabel, timeLabel } = nowLabels();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
   const visitorName = sid ? getVisitorName(sid) : null;
   const nameLine = visitorName ? ` Le visiteur s'appelle ${visitorName} — adresse-toi à lui par son prénom quand c'est naturel.` : "";
 
-  const { response, data } = await callGeminiWithRetry(url, {
-    contents: history,
-    systemInstruction: {
-      parts: [
-        {
-          text:
-            `Tu es un assistant IA utile, chaleureux et clair, qui répond aux visiteurs d'un site web. Réponds dans la langue du visiteur. Sois concis mais complet. ` +
-            `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure du Bénin, UTC+1). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais.` +
-            nameLine,
-        },
-      ],
-    },
-    generationConfig: { maxOutputTokens: 800, temperature: 0.7 },
-  });
+  const systemText =
+    `Tu es un assistant IA utile, chaleureux et clair, qui répond aux visiteurs d'un site web. Réponds dans la langue du visiteur. Sois concis mais complet. ` +
+    `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure du Bénin, UTC+1). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais.` +
+    nameLine;
+
+  const { response, data } = await callGroqWithRetry(historyToGroqMessages(history, systemText));
 
   if (!response.ok) {
-    console.error("Gemini API error:", data);
+    console.error("Groq API error:", data);
     // After retries, don't dead-end the visitor with a raw error — respond warmly instead.
     history.push({ role: "model", parts: [{ text: FALLBACK_REPLY }] });
     return res.json({ type: "text", reply: FALLBACK_REPLY });
   }
 
-  const reply =
-    data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") ||
-    "Désolé, je n'ai pas pu générer de réponse.";
+  const reply = data?.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer de réponse.";
 
   history.push({ role: "model", parts: [{ text: reply }] });
   res.json({ type: "text", reply });
@@ -246,32 +287,34 @@ async function handleImageRequest(message, history, res) {
 }
 
 async function handlePdfRequest(message, history, res) {
-  const { todayLabel, timeLabel } = nowLabels();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const { response, data } = await callGeminiWithRetry(url, {
-    contents: [{ role: "user", parts: [{ text: message }] }],
-    systemInstruction: {
-      parts: [
-        {
-          text:
-            `Tu es un assistant qui rédige le contenu d'un document PDF demandé par un visiteur d'un site web. ` +
-            `Rédige uniquement le contenu du document (pas de phrase du type "voici le contenu"), structuré avec des titres clairs si utile. ` +
-            `Réponds dans la langue du visiteur. Nous sommes le ${todayLabel}, ${timeLabel} (heure du Bénin).`,
-        },
-      ],
-    },
-    generationConfig: { maxOutputTokens: 1500, temperature: 0.6 },
-  });
-
-  if (!response.ok) {
-    console.error("Gemini API error:", data);
-    return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
+  if (!GROQ_API_KEY) {
+    return res.status(500).json({
+      error: "Aucune clé API n'est configurée sur le serveur. Ajoute GROQ_API_KEY dans les variables d'environnement.",
+    });
   }
 
-  const content =
-    data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") ||
-    "Contenu indisponible.";
+  const { todayLabel, timeLabel } = nowLabels();
+  const systemText =
+    `Tu es un assistant qui rédige le contenu d'un document PDF demandé par un visiteur d'un site web. ` +
+    `Rédige uniquement le contenu du document (pas de phrase du type "voici le contenu"), structuré avec des titres clairs si utile. ` +
+    `Réponds dans la langue du visiteur. Nous sommes le ${todayLabel}, ${timeLabel} (heure du Bénin).`;
+
+  const { response, data } = await callGroqWithRetry([
+    { role: "system", content: systemText },
+    { role: "user", content: message },
+  ]);
+
+  if (!response.ok) {
+    console.error("Groq API error:", data);
+    return res.status(response.status === 429 ? 429 : 502).json({
+      error:
+        response.status === 429
+          ? "Il y a trop de demandes en ce moment (limite gratuite atteinte). Réessaie dans une minute."
+          : data?.error?.message || "Erreur lors de l'appel à l'IA.",
+    });
+  }
+
+  const content = data?.choices?.[0]?.message?.content || "Contenu indisponible.";
 
   const id = crypto.randomUUID();
   const buffers = [];
