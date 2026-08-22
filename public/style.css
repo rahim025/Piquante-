@@ -53,7 +53,10 @@ body {
   gap: 10px;
 }
 
-.brand-name {
+.brand-mark img {
+  display: block;
+  border-radius: 8px;
+}
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.15rem;
@@ -281,6 +284,31 @@ body {
   color: var(--parchment-dim);
   margin: 10px 0 0;
 }
+
+.generated-image {
+  max-width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+  border: 1px solid var(--moss-700);
+  display: block;
+}
+
+.pdf-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 9px 16px;
+  background: var(--amber);
+  color: var(--moss-950);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.88rem;
+  border-radius: 100px;
+  transition: background 0.15s ease;
+}
+.pdf-download:hover { background: var(--amber-bright); }
 
 /* ---------- Scrollbar (subtle) ---------- */
 .stage::-webkit-scrollbar { width: 8px; }
