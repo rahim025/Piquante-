@@ -32,6 +32,19 @@
     let safe = escapeHtml(text);
     safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     safe = safe.replace(/(^|\n)\* (.+)/g, "$1• $2");
+
+    // Liens au format Markdown : [texte](https://exemple.com)
+    safe = safe.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+    // URLs brutes restantes (non déjà transformées en <a>)
+    safe = safe.replace(
+      /(^|[^"'>])(https?:\/\/[^\s<]+)/g,
+      '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>'
+    );
+
     return safe;
   }
 
