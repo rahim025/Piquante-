@@ -81,6 +81,29 @@
     if (el) el.remove();
   }
 
+  function addImageMessage(text, dataUrl) {
+    const bubble = addMessage("assistant", text);
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    img.alt = "Image générée";
+    img.className = "generated-image";
+    bubble.appendChild(document.createElement("br"));
+    bubble.appendChild(img);
+    return bubble;
+  }
+
+  function addPdfMessage(text, pdfUrl) {
+    const bubble = addMessage("assistant", text);
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.className = "pdf-download";
+    link.textContent = "⬇ Télécharger le PDF";
+    link.setAttribute("download", "document.pdf");
+    bubble.appendChild(document.createElement("br"));
+    bubble.appendChild(link);
+    return bubble;
+  }
+
   async function sendMessage(text) {
     if (busy || !text.trim()) return;
     busy = true;
@@ -103,6 +126,10 @@
       if (!res.ok) {
         const bubble = addMessage("assistant", data.error || "Une erreur est survenue.");
         bubble.parentElement.classList.add("error");
+      } else if (data.type === "image") {
+        addImageMessage(data.reply, data.image);
+      } else if (data.type === "pdf") {
+        addPdfMessage(data.reply, data.pdfUrl);
       } else {
         addMessage("assistant", data.reply);
       }
