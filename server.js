@@ -36,6 +36,20 @@ app.post("/api/chat", async (req, res) => {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
+    const now = new Date();
+    const todayLabel = now.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "Europe/Paris",
+    });
+    const timeLabel = now.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Paris",
+    });
+
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -45,7 +59,8 @@ app.post("/api/chat", async (req, res) => {
           parts: [
             {
               text:
-                "Tu es un assistant IA utile, chaleureux et clair, qui répond aux visiteurs d'un site web. Réponds dans la langue du visiteur. Sois concis mais complet.",
+                `Tu es un assistant IA utile, chaleureux et clair, qui répond aux visiteurs d'un site web. Réponds dans la langue du visiteur. Sois concis mais complet. ` +
+                `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure de Paris). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais.`,
             },
           ],
         },
