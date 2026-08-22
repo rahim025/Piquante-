@@ -310,6 +310,19 @@ body {
 }
 .pdf-download:hover { background: var(--amber-bright); }
 
+.speak-btn {
+  margin-top: 6px;
+  background: transparent;
+  border: none;
+  color: var(--parchment-dim);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  align-self: flex-start;
+}
+.speak-btn:hover { color: var(--amber-bright); }
+
 /* ---------- Scrollbar (subtle) ---------- */
 .stage::-webkit-scrollbar { width: 8px; }
 .stage::-webkit-scrollbar-thumb { background: var(--moss-700); border-radius: 8px; }

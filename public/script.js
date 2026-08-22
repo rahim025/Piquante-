@@ -35,6 +35,36 @@
     return safe;
   }
 
+  let currentAudio = null;
+
+  async function playSpeech(text, btn) {
+    if (btn.dataset.loading === "1") return;
+    try {
+      btn.dataset.loading = "1";
+      btn.textContent = "⏳";
+      const res = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur audio");
+
+      if (currentAudio) currentAudio.pause();
+      currentAudio = new Audio(data.audioUrl);
+      btn.textContent = "🔊";
+      currentAudio.play();
+      currentAudio.onended = () => {
+        btn.textContent = "🔈";
+      };
+    } catch (err) {
+      btn.textContent = "🔈";
+      console.error(err);
+    } finally {
+      btn.dataset.loading = "0";
+    }
+  }
+
   function addMessage(role, text) {
     if (intro && !intro.dataset.hidden) {
       intro.style.display = "none";
@@ -54,6 +84,17 @@
     }
     wrap.appendChild(label);
     wrap.appendChild(bubble);
+
+    if (role === "assistant") {
+      const speakBtn = document.createElement("button");
+      speakBtn.type = "button";
+      speakBtn.className = "speak-btn";
+      speakBtn.textContent = "🔈";
+      speakBtn.title = "Écouter cette réponse";
+      speakBtn.addEventListener("click", () => playSpeech(text, speakBtn));
+      wrap.appendChild(speakBtn);
+    }
+
     thread.appendChild(wrap);
     thread.scrollTop = thread.scrollHeight;
     document.querySelector(".stage").scrollTo({ top: 999999, behavior: "smooth" });
