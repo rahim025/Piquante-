@@ -22,6 +22,19 @@
   }
   input.addEventListener("input", autoGrow);
 
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderFormatted(text) {
+    let safe = escapeHtml(text);
+    safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    safe = safe.replace(/(^|\n)\* (.+)/g, "$1• $2");
+    return safe;
+  }
+
   function addMessage(role, text) {
     if (intro && !intro.dataset.hidden) {
       intro.style.display = "none";
@@ -34,7 +47,11 @@
     label.textContent = role === "user" ? "Toi" : "Piquant";
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
-    bubble.textContent = text;
+    if (role === "assistant") {
+      bubble.innerHTML = renderFormatted(text);
+    } else {
+      bubble.textContent = text;
+    }
     wrap.appendChild(label);
     wrap.appendChild(bubble);
     thread.appendChild(wrap);
