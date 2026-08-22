@@ -81,6 +81,88 @@
     60%  { transform: translateY(1px) scale(0.97, 1.03); }
     100% { transform: translateY(0) scale(1); }
   }
+
+  /* ============================================================
+     FOND AMBIANT — braises réalistes + profondeur (parallax souris)
+     ============================================================ */
+
+  .bg-ambient {
+    perspective: 800px;
+  }
+
+  /* Voile de chaleur : un halo qui respire très lentement en fond,
+     donnant une impression de brasier lointain plutôt qu'un fond plat */
+  .bg-ambient::before {
+    content: "";
+    position: fixed;
+    inset: -10%;
+    background:
+      radial-gradient(ellipse 40% 30% at 20% 80%, rgba(201, 83, 28, 0.10), transparent 60%),
+      radial-gradient(ellipse 35% 25% at 80% 15%, rgba(244, 162, 89, 0.08), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    animation: hh-ember-glow 9s ease-in-out infinite;
+  }
+  @keyframes hh-ember-glow {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.06); }
+  }
+
+  /* Chaque particule devient une braise : lueur en couches, scintillement
+     irrégulier, et une vraie trajectoire de montée avec dérive latérale —
+     plutôt qu'un point statique qui clignote. */
+  .bg-spark {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #ffb347;
+    box-shadow:
+      0 0 4px 1px rgba(255, 179, 71, 0.9),
+      0 0 10px 3px rgba(244, 114, 44, 0.5),
+      0 0 18px 6px rgba(201, 83, 28, 0.25);
+    animation-name: hh-ember-rise, hh-ember-flicker;
+    animation-timing-function: cubic-bezier(0.36, 0.11, 0.35, 1), ease-in-out;
+    animation-iteration-count: infinite, infinite;
+    will-change: transform, opacity;
+  }
+
+  /* Trajectoire : monte, dérive légèrement à gauche/droite en S,
+     comme une braise portée par un courant d'air irrégulier */
+  @keyframes hh-ember-rise {
+    0%   { transform: translate(0, 0) scale(0.6); }
+    20%  { transform: translate(6px, -18vh) scale(1); }
+    45%  { transform: translate(-8px, -38vh) scale(0.9); }
+    70%  { transform: translate(5px, -58vh) scale(1.05); }
+    100% { transform: translate(-4px, -80vh) scale(0.4); }
+  }
+
+  /* Scintillement indépendant, désynchronisé de la montée */
+  @keyframes hh-ember-flicker {
+    0%, 100% { opacity: 0.15; }
+    15%      { opacity: 0.9; }
+    30%      { opacity: 0.35; }
+    50%      { opacity: 1; }
+    65%      { opacity: 0.25; }
+    82%      { opacity: 0.75; }
+  }
+
+  /* Variation organique de taille/teinte selon la position dans le DOM,
+     pour casser toute répétition mécanique */
+  .bg-spark:nth-child(3n)   { background: #f4a259; width: 2px; height: 2px; }
+  .bg-spark:nth-child(4n)   { background: #ffd9a8; width: 4px; height: 4px; }
+  .bg-spark:nth-child(5n+1) { filter: blur(0.4px); }
+  .bg-spark:nth-child(7n)   {
+    box-shadow:
+      0 0 5px 1px rgba(255, 217, 168, 0.9),
+      0 0 12px 4px rgba(244, 162, 89, 0.4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-ambient::before,
+    .bg-spark {
+      animation: none !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -256,6 +338,32 @@
     this.classList.add('hh-clicked');
     setTimeout(() => this.classList.remove('hh-clicked'), 350);
   });
+</script>
+<script>
+  // Parallax léger du fond : les braises et le halo suivent la souris
+  // avec un délai amorti, pour une sensation de profondeur réelle
+  // plutôt qu'un fond plat.
+  (function () {
+    const ambient = document.querySelector('.bg-ambient');
+    if (!ambient || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let targetX = 0, targetY = 0, curX = 0, curY = 0;
+
+    window.addEventListener('pointermove', (e) => {
+      const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+      const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+      targetX = nx * 14;
+      targetY = ny * 10;
+    }, { passive: true });
+
+    function animate() {
+      curX += (targetX - curX) * 0.05;
+      curY += (targetY - curY) * 0.05;
+      ambient.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
 </script>
 <script src="script.js"></script>
 </body>
