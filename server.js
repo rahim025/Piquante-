@@ -82,6 +82,13 @@ function nowLabels() {
   return { todayLabel, timeLabel };
 }
 
+function friendlyApiError(response, data) {
+  if (response.status === 429) {
+    return "Il y a trop de demandes en ce moment (limite gratuite atteinte). Réessaie dans une minute.";
+  }
+  return data?.error?.message || "Erreur lors de l'appel à l'IA.";
+}
+
 async function handleTextRequest(message, history, res) {
   history.push({ role: "user", parts: [{ text: message }] });
   while (history.length > MAX_TURNS * 2) history.shift();
@@ -111,7 +118,7 @@ async function handleTextRequest(message, history, res) {
 
   if (!response.ok) {
     console.error("Gemini API error:", data);
-    return res.status(502).json({ error: data?.error?.message || "Erreur lors de l'appel à l'IA." });
+    return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
   }
 
   const reply =
@@ -137,7 +144,7 @@ async function handleImageRequest(message, history, res) {
 
   if (!response.ok) {
     console.error("Gemini image API error:", data);
-    return res.status(502).json({ error: data?.error?.message || "Erreur lors de la génération de l'image." });
+    return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
   }
 
   const parts = data?.candidates?.[0]?.content?.parts || [];
@@ -190,7 +197,7 @@ async function handlePdfRequest(message, history, res) {
 
   if (!response.ok) {
     console.error("Gemini API error:", data);
-    return res.status(502).json({ error: data?.error?.message || "Erreur lors de la génération du contenu." });
+    return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
   }
 
   const content =
