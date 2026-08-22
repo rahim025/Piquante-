@@ -57,6 +57,8 @@ body {
   display: block;
   border-radius: 8px;
 }
+
+.brand-name {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.15rem;
@@ -322,6 +324,95 @@ body {
   align-self: flex-start;
 }
 .speak-btn:hover { color: var(--amber-bright); }
+
+/* ---------- Mandala (hero animation) ---------- */
+
+.mandala{
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 4px 0 22px;
+}
+
+.mandala .core{
+  position: absolute;
+  inset: 42%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold), var(--amber) 55%, var(--amber) 100%);
+  box-shadow:
+    0 0 18px 5px rgba(230,154,95,0.5),
+    0 0 40px 14px rgba(201,123,74,0.22);
+  animation: breathe 4.2s ease-in-out infinite;
+  z-index: 3;
+}
+.mandala .core::after{
+  content:"";
+  position:absolute;
+  inset:22%;
+  border-radius:50%;
+  background: var(--moss-950);
+  opacity:0.85;
+}
+@keyframes breathe{
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+
+.mandala .quill{
+  position:absolute;
+  width:2px;
+  height:46%;
+  top:4%;
+  left:calc(50% - 1px);
+  transform-origin:50% 100%;
+  transform: rotate(calc(var(--i) * 15deg));
+  background: linear-gradient(to top, var(--amber) 0%, var(--amber-bright) 55%, transparent 100%);
+  border-radius:3px;
+  opacity:0;
+  animation: quillpulse 4.2s cubic-bezier(.22,.61,.36,1) infinite;
+  animation-delay: calc(var(--i) * 0.05s);
+}
+@keyframes quillpulse{
+  0%   { opacity:0;   transform: rotate(calc(var(--i) * 15deg)) scaleY(0.35); }
+  12%  { opacity:1;   transform: rotate(calc(var(--i) * 15deg)) scaleY(1); }
+  45%  { opacity:0.55;transform: rotate(calc(var(--i) * 15deg)) scaleY(0.82); }
+  70%  { opacity:0;   transform: rotate(calc(var(--i) * 15deg)) scaleY(0.35); }
+  100% { opacity:0;   transform: rotate(calc(var(--i) * 15deg)) scaleY(0.35); }
+}
+
+.mandala .ring{
+  position:absolute;
+  border:1px solid var(--amber);
+  border-radius:50%;
+  opacity:0;
+  animation: ripple 4.2s ease-out infinite;
+}
+.mandala .ring.r1{ width:30%; height:30%; animation-delay:0s; }
+.mandala .ring.r2{ width:30%; height:30%; animation-delay:1.4s; }
+.mandala .ring.r3{ width:30%; height:30%; animation-delay:2.8s; }
+@keyframes ripple{
+  0%   { width:26%; height:26%; opacity:0.7; border-color:var(--gold); }
+  80%  { opacity:0; }
+  100% { width:98%; height:98%; opacity:0; border-color:var(--amber); }
+}
+
+.credit{
+  text-align:center;
+  font-family: var(--font-mono);
+  font-size:0.68rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color: var(--moss-700);
+  margin:6px 0 0;
+}
+.credit span{ color: var(--sage); }
+
+@media (prefers-reduced-motion: reduce){
+  .mandala .quill, .mandala .core, .mandala .ring{
+    animation:none !important;
+    opacity:1 !important;
+  }
+}
 
 /* ---------- Scrollbar (subtle) ---------- */
 .stage::-webkit-scrollbar { width: 8px; }
