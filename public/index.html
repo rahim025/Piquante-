@@ -6,6 +6,7 @@
 <title>Piquant — l'assistant qui va droit au but</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="logo.svg" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -15,18 +16,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 48 48" width="28" height="28">
-          <g stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round">
-            <line x1="24" y1="4" x2="20" y2="15"/>
-            <line x1="24" y1="4" x2="28" y2="15"/>
-            <line x1="12" y1="7" x2="16" y2="17"/>
-            <line x1="36" y1="7" x2="32" y2="17"/>
-            <line x1="6" y1="16" x2="13" y2="21"/>
-            <line x1="42" y1="16" x2="35" y2="21"/>
-          </g>
-          <circle cx="24" cy="27" r="10" fill="var(--amber)"/>
-          <circle cx="20" cy="25" r="1.6" fill="var(--moss-900)"/>
-        </svg>
+        <img src="logo.svg" alt="" width="30" height="30" />
       </span>
       <span class="brand-name">Piquant</span>
     </div>
@@ -36,6 +26,36 @@
   <main class="stage">
 
     <section id="intro" class="intro">
+      <div class="mandala" aria-hidden="true">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="quill" style="--i:0"></div>
+        <div class="quill" style="--i:1"></div>
+        <div class="quill" style="--i:2"></div>
+        <div class="quill" style="--i:3"></div>
+        <div class="quill" style="--i:4"></div>
+        <div class="quill" style="--i:5"></div>
+        <div class="quill" style="--i:6"></div>
+        <div class="quill" style="--i:7"></div>
+        <div class="quill" style="--i:8"></div>
+        <div class="quill" style="--i:9"></div>
+        <div class="quill" style="--i:10"></div>
+        <div class="quill" style="--i:11"></div>
+        <div class="quill" style="--i:12"></div>
+        <div class="quill" style="--i:13"></div>
+        <div class="quill" style="--i:14"></div>
+        <div class="quill" style="--i:15"></div>
+        <div class="quill" style="--i:16"></div>
+        <div class="quill" style="--i:17"></div>
+        <div class="quill" style="--i:18"></div>
+        <div class="quill" style="--i:19"></div>
+        <div class="quill" style="--i:20"></div>
+        <div class="quill" style="--i:21"></div>
+        <div class="quill" style="--i:22"></div>
+        <div class="quill" style="--i:23"></div>
+        <div class="core"></div>
+      </div>
       <h1>Une question&nbsp;? <em>Pose-la.</em></h1>
       <p class="lede">Piquant est un assistant qui répond droit au but — pas de détour, pas de blabla. Écris ce que tu cherches, ci-dessous.</p>
       <div class="prompt-chips">
@@ -64,6 +84,7 @@
       </button>
     </form>
     <p class="disclaimer">Piquant peut se tromper. Vérifie les informations importantes.</p>
+    <p class="credit">Créé par <span>Rahim Batchabi</span></p>
   </footer>
 
 </div>
