@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Piquant — l'esprit qui s'éveille</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --moss-950:#0b0f0a;
+    --moss-900:#1b2420;
+    --moss-700:#3a4a3d;
+    --sage:#7c9473;
+    --parchment:#ede7d9;
+    --parchment-dim:#a9a294;
+    --amber:#c97b4a;
+    --amber-bright:#e69a5f;
+    --gold:#f2c879;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    height:100%;
+    background:radial-gradient(ellipse 120% 90% at 50% 30%, var(--moss-900), var(--moss-950) 70%);
+    overflow:hidden;
+    font-family:"Inter", sans-serif;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+  }
+
+  /* ---------- Ambient particle field ---------- */
+  .sparks{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .spark{
+    position:absolute;
+    width:3px;
+    height:3px;
+    border-radius:50%;
+    background:var(--gold);
+    opacity:0;
+    box-shadow:0 0 6px 1px var(--amber-bright);
+    animation:drift 7s ease-in-out infinite;
+    animation-delay:calc(var(--i) * 0.35s);
+  }
+  @keyframes drift{
+    0%   { opacity:0; transform:translateY(0) scale(0.6); }
+    15%  { opacity:0.9; }
+    50%  { opacity:0.5; transform:translateY(-22px) scale(1); }
+    85%  { opacity:0.9; }
+    100% { opacity:0; transform:translateY(-46px) scale(0.6); }
+  }
+
+  /* ---------- Signature: breathing quill mandala ---------- */
+  .mandala{
+    position:relative;
+    width:min(72vmin, 480px);
+    height:min(72vmin, 480px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .core{
+    position:absolute;
+    width:15%;
+    height:15%;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold), var(--amber) 55%, var(--amber) 100%);
+    box-shadow:
+      0 0 24px 6px rgba(230,154,95,0.55),
+      0 0 60px 18px rgba(201,123,74,0.25);
+    animation:breathe 4.2s ease-in-out infinite;
+    z-index:3;
+  }
+  .core::after{
+    content:"";
+    position:absolute;
+    inset:22%;
+    border-radius:50%;
+    background:var(--moss-950);
+    opacity:0.85;
+  }
+  @keyframes breathe{
+    0%, 100% { transform:scale(1); }
+    50%      { transform:scale(1.18); }
+  }
+
+  .quill{
+    position:absolute;
+    width:2.5px;
+    height:46%;
+    top:4%;
+    left:calc(50% - 1.25px);
+    transform-origin:50% 100%;
+    transform: rotate(calc(var(--i) * 11.25deg));
+    background:linear-gradient(to top, var(--amber) 0%, var(--amber-bright) 55%, transparent 100%);
+    border-radius:3px;
+    opacity:0;
+    animation: quillpulse 4.2s cubic-bezier(.22,.61,.36,1) infinite;
+    animation-delay: calc(var(--i) * 0.045s);
+  }
+  @keyframes quillpulse{
+    0%   { opacity:0;   transform: rotate(calc(var(--i) * 11.25deg)) scaleY(0.35); }
+    12%  { opacity:1;   transform: rotate(calc(var(--i) * 11.25deg)) scaleY(1); }
+    45%  { opacity:0.55;transform: rotate(calc(var(--i) * 11.25deg)) scaleY(0.82); }
+    70%  { opacity:0;   transform: rotate(calc(var(--i) * 11.25deg)) scaleY(0.35); }
+    100% { opacity:0;   transform: rotate(calc(var(--i) * 11.25deg)) scaleY(0.35); }
+  }
+
+  .ring{
+    position:absolute;
+    border:1px solid var(--amber);
+    border-radius:50%;
+    opacity:0;
+    animation: ripple 4.2s ease-out infinite;
+  }
+  .ring.r1{ width:30%; height:30%; animation-delay:0s; }
+  .ring.r2{ width:30%; height:30%; animation-delay:1.4s; }
+  .ring.r3{ width:30%; height:30%; animation-delay:2.8s; }
+  @keyframes ripple{
+    0%   { width:26%; height:26%; opacity:0.7; border-color:var(--gold); }
+    80%  { opacity:0; }
+    100% { width:98%; height:98%; opacity:0; border-color:var(--amber); }
+  }
+
+  /* ---------- Headline ---------- */
+  .caption{
+    margin-top:38px;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:"JetBrains Mono", monospace;
+    font-size:0.72rem;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--sage);
+    opacity:0;
+    animation: rise 0.9s ease forwards;
+    animation-delay:0.3s;
+  }
+  h1{
+    font-family:"Fraunces", serif;
+    font-weight:600;
+    font-size:clamp(1.7rem, 5vw, 2.6rem);
+    color:var(--parchment);
+    margin:10px 0 0;
+    letter-spacing:-0.01em;
+    opacity:0;
+    animation: rise 1s ease forwards;
+    animation-delay:0.55s;
+  }
+  h1 em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--amber-bright);
+  }
+  p{
+    font-size:0.95rem;
+    color:var(--parchment-dim);
+    max-width:34ch;
+    margin:14px auto 0;
+    line-height:1.55;
+    opacity:0;
+    animation: rise 1s ease forwards;
+    animation-delay:0.8s;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .quill, .core, .ring, .spark, .eyebrow, h1, p{
+      animation:none !important;
+      opacity:1 !important;
+    }
+  }
+
+  @media (max-width:480px){
+    .mandala{ width:82vmin; height:82vmin; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="sparks">
+    <span class="spark" style="--i:0; left:92.0%; top:50.0%;"></span>
+      <span class="spark" style="--i:1; left:89.5%; top:63.0%;"></span>
+      <span class="spark" style="--i:2; left:82.2%; top:74.4%;"></span>
+      <span class="spark" style="--i:3; left:71.0%; top:82.9%;"></span>
+      <span class="spark" style="--i:4; left:57.3%; top:87.4%;"></span>
+      <span class="spark" style="--i:5; left:42.7%; top:87.4%;"></span>
+      <span class="spark" style="--i:6; left:29.0%; top:82.9%;"></span>
+      <span class="spark" style="--i:7; left:17.8%; top:74.4%;"></span>
+      <span class="spark" style="--i:8; left:10.5%; top:63.0%;"></span>
+      <span class="spark" style="--i:9; left:8.0%; top:50.0%;"></span>
+      <span class="spark" style="--i:10; left:10.5%; top:37.0%;"></span>
+      <span class="spark" style="--i:11; left:17.8%; top:25.6%;"></span>
+      <span class="spark" style="--i:12; left:29.0%; top:17.1%;"></span>
+      <span class="spark" style="--i:13; left:42.7%; top:12.6%;"></span>
+      <span class="spark" style="--i:14; left:57.3%; top:12.6%;"></span>
+      <span class="spark" style="--i:15; left:71.0%; top:17.1%;"></span>
+      <span class="spark" style="--i:16; left:82.2%; top:25.6%;"></span>
+      <span class="spark" style="--i:17; left:89.5%; top:37.0%;"></span>
+  </div>
+
+  <div class="mandala">
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="quill" style="--i:0"></div>
+      <div class="quill" style="--i:1"></div>
+      <div class="quill" style="--i:2"></div>
+      <div class="quill" style="--i:3"></div>
+      <div class="quill" style="--i:4"></div>
+      <div class="quill" style="--i:5"></div>
+      <div class="quill" style="--i:6"></div>
+      <div class="quill" style="--i:7"></div>
+      <div class="quill" style="--i:8"></div>
+      <div class="quill" style="--i:9"></div>
+      <div class="quill" style="--i:10"></div>
+      <div class="quill" style="--i:11"></div>
+      <div class="quill" style="--i:12"></div>
+      <div class="quill" style="--i:13"></div>
+      <div class="quill" style="--i:14"></div>
+      <div class="quill" style="--i:15"></div>
+      <div class="quill" style="--i:16"></div>
+      <div class="quill" style="--i:17"></div>
+      <div class="quill" style="--i:18"></div>
+      <div class="quill" style="--i:19"></div>
+      <div class="quill" style="--i:20"></div>
+      <div class="quill" style="--i:21"></div>
+      <div class="quill" style="--i:22"></div>
+      <div class="quill" style="--i:23"></div>
+      <div class="quill" style="--i:24"></div>
+      <div class="quill" style="--i:25"></div>
+      <div class="quill" style="--i:26"></div>
+      <div class="quill" style="--i:27"></div>
+      <div class="quill" style="--i:28"></div>
+      <div class="quill" style="--i:29"></div>
+      <div class="quill" style="--i:30"></div>
+      <div class="quill" style="--i:31"></div>
+    <div class="core"></div>
+  </div>
+
+  <div class="caption">
+    <div class="eyebrow">Piquant · assistant IA</div>
+    <h1>Une pensée qui <em>s'éveille</em>,<br/>à chaque question.</h1>
+    <p>Chaque question fait vibrer un nouvel élan — comme un esprit qui déploie ses piquants pour réfléchir avec toi.</p>
+  </div>
+</div>
+
+</body>
+</html>
