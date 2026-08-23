@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="style.css" />
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   /* --- Icône hérisson animée (remplace logo.svg dans le header) --- */
   .hedgehog-icon-wrap {
@@ -678,6 +679,109 @@
     padding: 4px 6px;
   }
   .sidebar-logout:hover { color: #f4a259; }
+
+  /* ============================================================
+     COMMUNAUTÉ — chat public + messages privés + présence
+     ============================================================ */
+  #communityOverlay {
+    position: fixed; inset: 0; z-index: 80;
+    background: rgba(10,6,4,0.6);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    padding: 16px; box-sizing: border-box;
+  }
+  #communityOverlay.open { opacity: 1; visibility: visible; }
+
+  .community-panel {
+    width: 100%; max-width: 480px; height: 82vh; max-height: 640px;
+    background: #17100b;
+    border: 1px solid rgba(233,193,154,0.14);
+    border-radius: 18px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .community-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid rgba(233,193,154,0.1);
+  }
+  .community-header h3 {
+    margin: 0; font-family: 'Fraunces', serif; color: #f0dcc3; font-size: 1.05rem;
+  }
+  .community-close {
+    background: none; border: none; color: #9a8570; cursor: pointer; font-size: 1.3rem; line-height: 1; padding: 4px;
+  }
+  .community-close:hover { color: #f4a259; }
+
+  .community-tabs {
+    display: flex; gap: 4px; padding: 8px 12px 0;
+    border-bottom: 1px solid rgba(233,193,154,0.1);
+  }
+  .community-tab {
+    flex: 1; text-align: center; padding: 9px 0; font-family: 'Inter', sans-serif;
+    font-size: 0.85rem; font-weight: 600; color: #9a8570; background: none; border: none;
+    cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .community-tab.active { color: #f4a259; border-bottom-color: #f4a259; }
+
+  .community-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .community-view { flex: 1; overflow: hidden; display: none; flex-direction: column; }
+  .community-view.active { display: flex; }
+
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .chat-msg { max-width: 78%; padding: 8px 12px; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.88rem; line-height: 1.4; word-wrap: break-word; }
+  .chat-msg .chat-msg-author { font-size: 0.72rem; color: #f4a259; font-weight: 600; margin-bottom: 2px; }
+  .chat-msg.mine { align-self: flex-end; background: linear-gradient(135deg,#c9531c,#f4a259); color: #1a1109; }
+  .chat-msg.theirs { align-self: flex-start; background: rgba(233,193,154,0.08); color: #f0dcc3; }
+  .chat-msg .chat-msg-time { font-size: 0.65rem; opacity: 0.6; margin-top: 3px; }
+
+  .chat-input-row {
+    display: flex; gap: 8px; padding: 12px; border-top: 1px solid rgba(233,193,154,0.1);
+  }
+  .chat-input-row input {
+    flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(233,193,154,0.16);
+    border-radius: 9px; padding: 10px 12px; color: #f0dcc3; font-family: 'Inter', sans-serif; font-size: 0.88rem; outline: none;
+  }
+  .chat-input-row input:focus { border-color: #f4a259; }
+  .chat-input-row button {
+    background: linear-gradient(135deg,#c9531c,#f4a259); border: none; border-radius: 9px;
+    padding: 0 16px; color: #1a1109; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.85rem;
+  }
+
+  .user-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .user-list-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-radius: 10px; cursor: pointer;
+  }
+  .user-list-item:hover { background: rgba(233,193,154,0.06); }
+  .user-list-item .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: #c9531c; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem;
+    flex-shrink: 0; position: relative;
+  }
+  .presence-dot {
+    width: 10px; height: 10px; border-radius: 50%; border: 2px solid #17100b;
+    position: absolute; bottom: -1px; right: -1px;
+    background: #6b5a48; /* hors ligne par défaut */
+  }
+  .presence-dot.online { background: #4caf50; }
+  .user-list-name { color: #f0dcc3; font-family: 'Inter', sans-serif; font-size: 0.9rem; flex: 1; }
+  .user-list-status { font-size: 0.72rem; color: #9a8570; font-family: 'Inter', sans-serif; }
+  .user-list-empty { text-align: center; color: #6b5a48; font-size: 0.85rem; padding: 30px 10px; font-family: 'Inter', sans-serif; font-style: italic; }
+
+  .thread-header {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid rgba(233,193,154,0.1);
+  }
+  .thread-back { background: none; border: none; color: #9a8570; cursor: pointer; font-size: 1.1rem; padding: 4px; }
+  .thread-back:hover { color: #f4a259; }
+  .thread-header .user-avatar { width: 28px; height: 28px; font-size: 0.75rem; }
+  .thread-header-name { color: #f0dcc3; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.9rem; }
+
+  .community-guest-note {
+    padding: 30px 20px; text-align: center; color: #9a8570; font-family: 'Inter', sans-serif; font-size: 0.88rem;
+  }
 </style>
 </head>
 <body>
@@ -1041,6 +1145,9 @@
       </span>
       <span class="brand-name">Piquant</span>
     </div>
+    <button class="icon-btn" id="communityBtn" aria-label="Communauté" title="Chat et messages privés">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M17 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M16 8.5a3 3 0 1 1 2 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M21 20v-1a3.5 3.5 0 0 0-2.3-3.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
     <button class="icon-btn" id="ghostBtn" aria-label="Conversation temporaire" title="Conversation temporaire (non sauvegardée)">
       <svg viewBox="0 0 24 24" fill="none">
         <path d="M12 3c-4.4 0-8 3.6-8 8v8.5c0 .5.6.8 1 .4l1.6-1.5 1.6 1.5c.3.3.8.3 1.1 0l1.7-1.5 1.7 1.5c.3.3.8.3 1.1 0l1.6-1.5 1.6 1.5c.4.4 1 .1 1-.4V11c0-4.4-3.6-8-8-8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -1114,6 +1221,61 @@
     <p class="credit">Créé par <span>Rahim Batchabi</span></p>
   </footer>
 
+</div>
+
+<!-- ============================================================
+     PANNEAU COMMUNAUTÉ — chat public + messages privés + présence
+     ============================================================ -->
+<div id="communityOverlay">
+  <div class="community-panel">
+    <div class="community-header">
+      <h3>Communauté</h3>
+      <button class="community-close" id="communityCloseBtn" aria-label="Fermer">&times;</button>
+    </div>
+
+    <div id="communityGuestNote" class="community-guest-note" style="display:none;">
+      Connecte-toi avec un compte pour accéder au chat et aux messages privés.
+    </div>
+
+    <div id="communityMain">
+      <div class="community-tabs">
+        <button class="community-tab active" id="tabPublicChat">Chat public</button>
+        <button class="community-tab" id="tabPrivateChat">Messages privés</button>
+      </div>
+
+      <div class="community-body">
+        <!-- Chat public -->
+        <div class="community-view active" id="viewPublicChat">
+          <div class="chat-messages" id="publicMessages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="publicInput" placeholder="Écris un message à tout le monde…" maxlength="500" />
+            <button id="publicSendBtn">Envoyer</button>
+          </div>
+        </div>
+
+        <!-- Messages privés : liste des utilisateurs -->
+        <div class="community-view" id="viewUserList">
+          <div class="user-list" id="userList">
+            <div class="user-list-empty">Chargement des utilisateurs…</div>
+          </div>
+        </div>
+
+        <!-- Messages privés : conversation avec un utilisateur -->
+        <div class="community-view" id="viewPrivateThread">
+          <div class="thread-header">
+            <button class="thread-back" id="threadBackBtn" aria-label="Retour">&larr;</button>
+            <span class="user-avatar" id="threadAvatar"></span>
+            <span class="thread-header-name" id="threadName"></span>
+          </div>
+          <div class="chat-messages" id="privateMessages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="privateInput" placeholder="Écris un message privé…" maxlength="500" />
+            <button id="privateSendBtn">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1470,6 +1632,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   // --- Déconnexion ---
   logoutBtn.addEventListener('click', function () {
     guestMode = false;
+    if (window.PiquantCommunity) window.PiquantCommunity.onLogout();
     auth.signOut();
     appRoot.classList.add('app-hidden');
     authScreen.classList.add('visible');
@@ -1504,9 +1667,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       sidebarAvatar.textContent = name.trim().charAt(0).toUpperCase();
       authScreen.classList.remove('visible');
       appRoot.classList.remove('app-hidden');
+      if (window.PiquantCommunity) window.PiquantCommunity.onLogin(user);
     } else {
       appRoot.classList.add('app-hidden');
       authScreen.classList.add('visible');
+      if (window.PiquantCommunity) window.PiquantCommunity.onLogout();
     }
     // Si le splash minimum est déjà passé, on bascule immédiatement
     if (splashMinTimeElapsed) {
@@ -1536,6 +1701,278 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   }, 4000);
 })();
 </script>
+
+<!-- ============================================================
+     LOGIQUE COMMUNAUTÉ : présence en ligne/hors ligne,
+     chat public, messages privés — utilise Firestore.
+     ============================================================ -->
+<script>
+(function () {
+  const db = firebase.firestore();
+
+  const PRESENCE_HEARTBEAT_MS = 20000;   // on rafraîchit "en ligne" toutes les 20s
+  const PRESENCE_STALE_MS = 45000;       // au-delà de 45s sans nouvelles, on considère hors ligne
+
+  let currentUser = null;
+  let heartbeatTimer = null;
+  let presenceUnsub = null;
+  let publicUnsub = null;
+  let privateUnsub = null;
+  let currentThreadUid = null; // uid de l'utilisateur avec qui on discute en privé
+  const usersCache = {}; // uid -> { name, online, lastSeen }
+
+  function avatarLetter(name) {
+    return (name || '?').trim().charAt(0).toUpperCase();
+  }
+
+  function chatIdFor(uidA, uidB) {
+    return [uidA, uidB].sort().join('_');
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // --- Présence : on écrit régulièrement notre statut, on nettoie à la déconnexion ---
+  function startPresence(user) {
+    const ref = db.collection('presence').doc(user.uid);
+    const name = user.displayName || user.email || 'Utilisateur';
+
+    function ping() {
+      ref.set({
+        name: name,
+        online: true,
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
+    ping();
+    heartbeatTimer = setInterval(ping, PRESENCE_HEARTBEAT_MS);
+
+    window.addEventListener('beforeunload', stopPresenceSync);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && currentUser) ping();
+    });
+  }
+
+  function stopPresenceSync() {
+    if (currentUser) {
+      db.collection('presence').doc(currentUser.uid).set({
+        online: false,
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
+  }
+
+  function stopPresence() {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+    stopPresenceSync();
+  }
+
+  // --- Liste des utilisateurs + statut en ligne/hors ligne ---
+  const userListEl = document.getElementById('userList');
+
+  function renderUserList() {
+    const entries = Object.entries(usersCache).filter(([uid]) => uid !== (currentUser && currentUser.uid));
+    if (entries.length === 0) {
+      userListEl.innerHTML = '<div class="user-list-empty">Aucun autre utilisateur pour le moment.</div>';
+      return;
+    }
+    const now = Date.now();
+    entries.sort((a, b) => (b[1].online ? 1 : 0) - (a[1].online ? 1 : 0));
+    userListEl.innerHTML = entries.map(([uid, u]) => {
+      const lastSeenMs = u.lastSeen ? u.lastSeen.toMillis() : 0;
+      const isOnline = u.online && (now - lastSeenMs < PRESENCE_STALE_MS);
+      return `
+        <div class="user-list-item" data-uid="${uid}">
+          <span class="user-avatar">${avatarLetter(u.name)}<span class="presence-dot ${isOnline ? 'online' : ''}"></span></span>
+          <span class="user-list-name">${u.name}</span>
+          <span class="user-list-status">${isOnline ? 'En ligne' : 'Hors ligne'}</span>
+        </div>`;
+    }).join('');
+
+    userListEl.querySelectorAll('.user-list-item').forEach(function (el) {
+      el.addEventListener('click', function () {
+        openPrivateThread(el.getAttribute('data-uid'), usersCache[el.getAttribute('data-uid')].name);
+      });
+    });
+  }
+
+  function listenPresence() {
+    presenceUnsub = db.collection('presence').onSnapshot(function (snap) {
+      snap.forEach(function (doc) {
+        usersCache[doc.id] = doc.data();
+      });
+      renderUserList();
+    });
+    // on rafraîchit l'affichage régulièrement pour faire "expirer" les statuts
+    setInterval(renderUserList, 10000);
+  }
+
+  // --- Chat public ---
+  const publicMessagesEl = document.getElementById('publicMessages');
+
+  function renderPublicMessage(doc) {
+    const m = doc.data();
+    const mine = currentUser && m.uid === currentUser.uid;
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + (mine ? 'mine' : 'theirs');
+    div.innerHTML = `${!mine ? `<div class="chat-msg-author">${m.name}</div>` : ''}${escapeHtml(m.text)}<div class="chat-msg-time">${formatTime(m.timestamp)}</div>`;
+    return div;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function listenPublicChat() {
+    publicUnsub = db.collection('publicMessages').orderBy('timestamp', 'asc').limitToLast(100)
+      .onSnapshot(function (snap) {
+        publicMessagesEl.innerHTML = '';
+        snap.forEach(function (doc) {
+          publicMessagesEl.appendChild(renderPublicMessage(doc));
+        });
+        publicMessagesEl.scrollTop = publicMessagesEl.scrollHeight;
+      });
+  }
+
+  function sendPublicMessage() {
+    const input = document.getElementById('publicInput');
+    const text = input.value.trim();
+    if (!text || !currentUser) return;
+    input.value = '';
+    db.collection('publicMessages').add({
+      text: text,
+      uid: currentUser.uid,
+      name: currentUser.displayName || currentUser.email || 'Utilisateur',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
+  }
+
+  document.getElementById('publicSendBtn').addEventListener('click', sendPublicMessage);
+  document.getElementById('publicInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') sendPublicMessage();
+  });
+
+  // --- Messages privés ---
+  const privateMessagesEl = document.getElementById('privateMessages');
+  const threadAvatarEl = document.getElementById('threadAvatar');
+  const threadNameEl = document.getElementById('threadName');
+
+  function openPrivateThread(uid, name) {
+    currentThreadUid = uid;
+    threadAvatarEl.textContent = avatarLetter(name);
+    threadNameEl.textContent = name;
+    switchView('viewPrivateThread');
+
+    if (privateUnsub) privateUnsub();
+    const cid = chatIdFor(currentUser.uid, uid);
+    privateUnsub = db.collection('privateMessages')
+      .where('chatId', '==', cid)
+      .orderBy('timestamp', 'asc')
+      .limitToLast(100)
+      .onSnapshot(function (snap) {
+        privateMessagesEl.innerHTML = '';
+        snap.forEach(function (doc) {
+          const m = doc.data();
+          const mine = m.from === currentUser.uid;
+          const div = document.createElement('div');
+          div.className = 'chat-msg ' + (mine ? 'mine' : 'theirs');
+          div.innerHTML = `${escapeHtml(m.text)}<div class="chat-msg-time">${formatTime(m.timestamp)}</div>`;
+          privateMessagesEl.appendChild(div);
+        });
+        privateMessagesEl.scrollTop = privateMessagesEl.scrollHeight;
+      });
+  }
+
+  function sendPrivateMessage() {
+    const input = document.getElementById('privateInput');
+    const text = input.value.trim();
+    if (!text || !currentUser || !currentThreadUid) return;
+    input.value = '';
+    db.collection('privateMessages').add({
+      chatId: chatIdFor(currentUser.uid, currentThreadUid),
+      text: text,
+      from: currentUser.uid,
+      to: currentThreadUid,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
+  }
+
+  document.getElementById('privateSendBtn').addEventListener('click', sendPrivateMessage);
+  document.getElementById('privateInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') sendPrivateMessage();
+  });
+
+  document.getElementById('threadBackBtn').addEventListener('click', function () {
+    if (privateUnsub) { privateUnsub(); privateUnsub = null; }
+    switchView('viewUserList');
+  });
+
+  // --- Navigation dans le panneau (onglets + vues) ---
+  function switchView(viewId) {
+    document.querySelectorAll('.community-view').forEach(function (v) { v.classList.remove('active'); });
+    document.getElementById(viewId).classList.add('active');
+  }
+
+  document.getElementById('tabPublicChat').addEventListener('click', function () {
+    this.classList.add('active');
+    document.getElementById('tabPrivateChat').classList.remove('active');
+    switchView('viewPublicChat');
+  });
+  document.getElementById('tabPrivateChat').addEventListener('click', function () {
+    this.classList.add('active');
+    document.getElementById('tabPublicChat').classList.remove('active');
+    switchView(currentThreadUid ? 'viewPrivateThread' : 'viewUserList');
+  });
+
+  // --- Ouverture / fermeture du panneau ---
+  const overlay = document.getElementById('communityOverlay');
+  const guestNote = document.getElementById('communityGuestNote');
+  const mainPanel = document.getElementById('communityMain');
+
+  document.getElementById('communityBtn').addEventListener('click', function () {
+    overlay.classList.add('open');
+    if (!currentUser) {
+      guestNote.style.display = 'block';
+      mainPanel.style.display = 'none';
+    } else {
+      guestNote.style.display = 'none';
+      mainPanel.style.display = 'block';
+    }
+  });
+  document.getElementById('communityCloseBtn').addEventListener('click', function () {
+    overlay.classList.remove('open');
+  });
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+
+  // --- API exposée pour se brancher sur l'authentification existante ---
+  window.PiquantCommunity = {
+    onLogin: function (user) {
+      currentUser = user;
+      startPresence(user);
+      if (!presenceUnsub) listenPresence();
+      if (!publicUnsub) listenPublicChat();
+    },
+    onLogout: function () {
+      stopPresence();
+      if (presenceUnsub) { presenceUnsub(); presenceUnsub = null; }
+      if (publicUnsub) { publicUnsub(); publicUnsub = null; }
+      if (privateUnsub) { privateUnsub(); privateUnsub = null; }
+      currentUser = null;
+      currentThreadUid = null;
+      overlay.classList.remove('open');
+    }
+  };
+})();
+</script>
+
 <script src="script.js"></script>
 </body>
 </html>
