@@ -1639,10 +1639,18 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   });
 
   // --- Connexion Google ---
+  // Sur mobile, les popups sont peu fiables (bloquées ou fermées par erreur).
+  // On utilise donc la redirection, plus stable sur téléphone.
   googleBtn.addEventListener('click', function () {
     clearError();
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch((err) => showError(friendlyError(err.code)));
+    auth.signInWithRedirect(provider).catch((err) => showError(friendlyError(err.code)));
+  });
+
+  // Après la redirection vers Google puis le retour sur le site, Firebase
+  // traite le résultat ici. On affiche une erreur claire si besoin.
+  auth.getRedirectResult().catch((err) => {
+    if (err && err.code) showError(friendlyError(err.code));
   });
 
   // --- Connexion email/mot de passe ---
