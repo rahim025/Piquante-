@@ -576,7 +576,195 @@
     margin-bottom: 22px;
     text-align: center;
   }
-  .auth-header .auth-logo { width: 46px; height: 46px; }
+  .auth-header .auth-logo { width: 46px; height: 46px; overflow: visible; }
+
+  /* --- Scène d'entrée : le hérisson marche puis se tourne face à l'utilisateur --- */
+  .welcome-scene {
+    position: relative;
+    width: 100%;
+    height: 58px;
+    margin-bottom: 4px;
+  }
+  .scene-ground {
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    bottom: 2px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(233,193,154,0.25), transparent);
+  }
+
+  .hh-walker {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: 40px;
+    height: 34px;
+    transform: translate(calc(-50% - 60px), 0);
+    animation: hhw-walk-in 1.4s cubic-bezier(.45,0,.2,1) forwards,
+               hhw-fade-out 0.35s ease 1.35s forwards;
+  }
+  @keyframes hhw-walk-in {
+    0%   { transform: translate(calc(-50% - 60px), 0); }
+    100% { transform: translate(-50%, 0); }
+  }
+  @keyframes hhw-fade-out {
+    to { opacity: 0; }
+  }
+
+  .hhw-body {
+    position: absolute;
+    width: 26px;
+    height: 18px;
+    left: 8px;
+    top: 10px;
+    border-radius: 50% 60% 50% 50%;
+    background: linear-gradient(135deg, #e9c19a, #a9754b);
+  }
+  .hhw-snout {
+    position: absolute;
+    width: 11px;
+    height: 7px;
+    left: 0px;
+    top: 15px;
+    background: #c99a6d;
+    border-radius: 50% 15% 15% 50%;
+  }
+  .hhw-nose {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    left: 0px;
+    top: 16px;
+    background: #2a1c12;
+    border-radius: 50%;
+  }
+  .hhw-eye {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    left: 15px;
+    top: 12px;
+    background: #2a1c12;
+    border-radius: 50%;
+  }
+  .hhw-ear {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    left: 18px;
+    top: 6px;
+    background: #a9754b;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-20deg);
+  }
+  .hhw-spike {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 3px 9px 3px;
+    border-color: transparent transparent #c9531c transparent;
+    transform-origin: bottom center;
+    transform: rotate(var(--r));
+  }
+  .hhw-leg {
+    position: absolute;
+    width: 4px;
+    height: 6px;
+    bottom: 0;
+    background: #8f6039;
+    border-radius: 2px;
+    transform-origin: top center;
+    animation: hhw-step 0.42s ease-in-out infinite;
+  }
+  .hhw-leg-a { left: 13px; animation-delay: 0s; }
+  .hhw-leg-b { left: 22px; animation-delay: 0.21s; }
+  @keyframes hhw-step {
+    0%, 100% { transform: rotate(-16deg); }
+    50%      { transform: rotate(16deg); }
+  }
+
+  /* Le hérisson "face caméra" (SVG existant) apparaît en douceur juste
+     après l'arrivée du marcheur, comme s'il se retournait vers vous */
+  .auth-header .auth-logo {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    transform: translate(-50%, 0) scale(0.5);
+    opacity: 0;
+    animation: hh-face-in 0.5s cubic-bezier(.34,1.56,.64,1) 1.3s forwards;
+  }
+  @keyframes hh-face-in {
+    to { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  }
+
+  .welcome-tagline {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: #f0dcc3;
+    text-align: center;
+    margin: 4px 0 0;
+    opacity: 0;
+    animation: welcome-text-in 0.5s ease 1.75s forwards;
+  }
+  @keyframes welcome-text-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-credit {
+    text-align: center;
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(233,193,154,0.35);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hh-walker { display: none; }
+    .auth-header .auth-logo { opacity: 1; transform: translate(-50%, 0) scale(1); animation: none; }
+    .welcome-tagline { opacity: 1; transform: none; animation: none; }
+  }
+
+  /* Respiration douce du hérisson "face caméra" une fois arrivé */
+  #authLogoBody {
+    transform-origin: 60px 68px;
+    animation: auth-hh-breathe 3.2s ease-in-out infinite;
+    animation-delay: 1.3s;
+  }
+  @keyframes auth-hh-breathe {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50%      { transform: scale(1.02, 0.98) translateY(1px); }
+  }
+
+  .auth-spike {
+    transform-origin: bottom center;
+    animation: auth-hh-fur 2.1s ease-in-out infinite;
+    animation-delay: 1.3s;
+  }
+  @keyframes auth-hh-fur {
+    0%, 100% { transform: rotate(0deg); }
+    50%      { transform: rotate(2deg); }
+  }
+
+  .auth-eye {
+    animation: auth-hh-blink 4.2s infinite;
+    animation-delay: 1.3s;
+    transform-origin: center;
+  }
+  @keyframes auth-hh-blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    93%           { transform: scaleY(0.15); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #authLogoBody, .auth-spike, .auth-eye { animation: none !important; }
+  }
+
   .auth-header h2 {
     font-family: 'Fraunces', serif;
     color: #f0dcc3;
@@ -1056,7 +1244,27 @@
 <div id="authScreen">
   <div class="auth-card">
     <div class="auth-header">
-      <svg class="auth-logo" viewBox="0 0 120 120">
+      <div class="welcome-scene">
+        <div class="scene-ground"></div>
+
+        <!-- Le hérisson arrive de profil, en marchant -->
+        <div class="hh-walker" id="hhWalker" aria-hidden="true">
+          <span class="hhw-spike" style="top:1px; left:10px; --r:-30deg;"></span>
+          <span class="hhw-spike" style="top:-2px; left:16px; --r:-14deg;"></span>
+          <span class="hhw-spike" style="top:-3px; left:22px; --r:2deg;"></span>
+          <span class="hhw-spike" style="top:-1px; left:28px; --r:18deg;"></span>
+          <span class="hhw-spike" style="top:3px; left:33px; --r:34deg;"></span>
+          <div class="hhw-body"></div>
+          <div class="hhw-snout"></div>
+          <div class="hhw-nose"></div>
+          <div class="hhw-eye"></div>
+          <div class="hhw-ear"></div>
+          <div class="hhw-leg hhw-leg-a"></div>
+          <div class="hhw-leg hhw-leg-b"></div>
+        </div>
+
+        <!-- Puis il se tourne pour faire face à l'utilisateur -->
+        <svg class="auth-logo" viewBox="0 0 120 120">
         <defs>
           <linearGradient id="authBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#eec9a1"/>
@@ -1074,25 +1282,31 @@
             <stop offset="100%" stop-color="#fff5e6" stop-opacity="0"/>
           </radialGradient>
         </defs>
-        <g stroke="url(#authSpikeGrad)" stroke-linecap="round">
-          <line x1="34" y1="46" x2="26" y2="26" stroke-width="2.6"/>
-          <line x1="43" y1="35" x2="40" y2="12" stroke-width="2.6"/>
-          <line x1="55" y1="29" x2="56" y2="6" stroke-width="2.7"/>
-          <line x1="67" y1="29" x2="72" y2="8" stroke-width="2.6"/>
-          <line x1="79" y1="35" x2="88" y2="17" stroke-width="2.6"/>
-          <line x1="30" y1="55" x2="18" y2="40" stroke-width="2.5"/>
-          <line x1="27" y1="71" x2="11" y2="65" stroke-width="2.5"/>
+        <g id="authLogoBody">
+          <g stroke="url(#authSpikeGrad)" stroke-linecap="round">
+            <line class="auth-spike" x1="34" y1="46" x2="26" y2="26" stroke-width="2.6"/>
+            <line class="auth-spike" x1="43" y1="35" x2="40" y2="12" stroke-width="2.6"/>
+            <line class="auth-spike" x1="55" y1="29" x2="56" y2="6" stroke-width="2.7"/>
+            <line class="auth-spike" x1="67" y1="29" x2="72" y2="8" stroke-width="2.6"/>
+            <line class="auth-spike" x1="79" y1="35" x2="88" y2="17" stroke-width="2.6"/>
+            <line class="auth-spike" x1="30" y1="55" x2="18" y2="40" stroke-width="2.5"/>
+            <line class="auth-spike" x1="27" y1="71" x2="11" y2="65" stroke-width="2.5"/>
+          </g>
+          <path d="M28 60 C 20 68, 18 84, 28 96 C 38 108, 62 110, 78 100 C 96 90, 100 68, 90 52 C 82 40, 66 34, 50 38 C 40 40, 32 48, 28 60 Z" fill="url(#authBodyGrad)"/>
+          <path d="M35 88 C 48 100, 70 100, 82 90 C 76 98, 60 103, 46 100 C 40 98, 36 94, 35 88 Z" fill="#8a5c37" opacity="0.3"/>
+          <ellipse cx="46" cy="49" rx="24" ry="17" fill="url(#authHighlightGrad)"/>
+          <path d="M28 63 C 16 60, 6 64, 2 70 C 6 75, 16 76, 26 71 Z" fill="#c99a6d"/>
+          <circle cx="4" cy="70" r="2.6" fill="#2a1c12"/>
+          <ellipse cx="3.2" cy="68.8" rx="0.7" ry="0.4" fill="#fff" opacity="0.5"/>
+          <ellipse class="auth-eye" cx="34" cy="58" rx="3.4" ry="3.8" fill="#2a1c12"/>
+          <circle cx="35.5" cy="56.5" r="1.1" fill="#fff" opacity="0.85"/>
+          <path d="M40 44 C 38 38, 44 34, 48 38 C 48 42, 44 46, 40 44 Z" fill="#8a5c37" opacity="0.7"/>
         </g>
-        <path d="M28 60 C 20 68, 18 84, 28 96 C 38 108, 62 110, 78 100 C 96 90, 100 68, 90 52 C 82 40, 66 34, 50 38 C 40 40, 32 48, 28 60 Z" fill="url(#authBodyGrad)"/>
-        <path d="M35 88 C 48 100, 70 100, 82 90 C 76 98, 60 103, 46 100 C 40 98, 36 94, 35 88 Z" fill="#8a5c37" opacity="0.3"/>
-        <ellipse cx="46" cy="49" rx="24" ry="17" fill="url(#authHighlightGrad)"/>
-        <path d="M28 63 C 16 60, 6 64, 2 70 C 6 75, 16 76, 26 71 Z" fill="#c99a6d"/>
-        <circle cx="4" cy="70" r="2.6" fill="#2a1c12"/>
-        <ellipse cx="3.2" cy="68.8" rx="0.7" ry="0.4" fill="#fff" opacity="0.5"/>
-        <ellipse cx="34" cy="58" rx="3.4" ry="3.8" fill="#2a1c12"/>
-        <circle cx="35.5" cy="56.5" r="1.1" fill="#fff" opacity="0.85"/>
-        <path d="M40 44 C 38 38, 44 34, 48 38 C 48 42, 44 46, 40 44 Z" fill="#8a5c37" opacity="0.7"/>
-      </svg>
+        </svg>
+      </div>
+
+      <p class="welcome-tagline">Bienvenue sur Piquant IA</p>
+
       <h2 id="authTitle">Bon retour</h2>
       <p id="authSubtitle">Connecte-toi pour continuer avec Piquant</p>
     </div>
@@ -1222,6 +1436,8 @@
     <button type="button" id="guestBtn" style="width:100%; margin-top:14px; background:none; border:1px solid rgba(233,193,154,0.25); color:#e9c19a; padding:12px; border-radius:10px; cursor:pointer; font-size:14px;">
       Utiliser sans compte pour l'instant
     </button>
+
+    <div class="auth-credit">Batchabi Rahim</div>
   </div>
 </div>
 
