@@ -864,6 +864,10 @@
     <p class="auth-switch-note" id="authSwitchNote">
       Pas encore de compte ? <button type="button" id="switchToSignup">Créer un compte</button>
     </p>
+
+    <button type="button" id="guestBtn" style="width:100%; margin-top:14px; background:none; border:1px solid rgba(233,193,154,0.25); color:#e9c19a; padding:12px; border-radius:10px; cursor:pointer; font-size:14px;">
+      Utiliser sans compte pour l'instant
+    </button>
   </div>
 </div>
 
@@ -1342,6 +1346,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const sidebarUserName = document.getElementById('sidebarUserName');
   const logoutBtn = document.getElementById('logoutBtn');
   const configWarning = document.getElementById('configWarning');
+  const guestBtn = document.getElementById('guestBtn');
 
   if (FIREBASE_NOT_CONFIGURED) {
     configWarning.textContent = "⚠️ Firebase n'est pas encore configuré : la connexion Google et par e-mail ne fonctionneront pas tant que vous n'aurez pas remplacé les clés REMPLACEZ_MOI dans le code (voir instructions).";
@@ -1403,6 +1408,17 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     return map[code] || "Une erreur est survenue. Réessaie.";
   }
 
+  // --- Utiliser sans compte (mode invité) ---
+  let guestMode = false;
+  guestBtn.addEventListener('click', function () {
+    guestMode = true;
+    sidebarUserName.textContent = 'Invité';
+    sidebarAvatar.textContent = 'I';
+    authScreen.classList.remove('visible');
+    appRoot.classList.remove('app-hidden');
+    splash.classList.add('fade-out');
+  });
+
   // --- Connexion Google ---
   googleBtn.addEventListener('click', function () {
     clearError();
@@ -1453,7 +1469,10 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
   // --- Déconnexion ---
   logoutBtn.addEventListener('click', function () {
+    guestMode = false;
     auth.signOut();
+    appRoot.classList.add('app-hidden');
+    authScreen.classList.add('visible');
   });
 
   // --- Orchestration des écrans : splash -> auth ou app ---
@@ -1476,6 +1495,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   }
 
   auth.onAuthStateChanged(function (user) {
+    if (guestMode && !user) return; // ne pas repasser à l'écran de connexion en mode invité
     authResolved = true;
     isLoggedIn = !!user;
     if (user) {
