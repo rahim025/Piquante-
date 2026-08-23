@@ -1649,8 +1649,18 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
   // Après la redirection vers Google puis le retour sur le site, Firebase
   // traite le résultat ici. On affiche une erreur claire si besoin.
-  auth.getRedirectResult().catch((err) => {
-    if (err && err.code) showError(friendlyError(err.code));
+  auth.getRedirectResult().then((result) => {
+    if (result && result.user) {
+      console.log('Connexion Google réussie via redirection :', result.user.email);
+    } else if (window.location.search.includes('state=') || document.referrer.includes('google.com') || document.referrer.includes('accounts.google')) {
+      // On revient bien de Google, mais Firebase n'a trouvé aucun résultat :
+      // signe que la redirection n'a pas pu être restaurée (souvent un souci
+      // de stockage partitionné par le navigateur sur mobile).
+      showError("La connexion Google n'a pas pu être finalisée par le navigateur (problème de stockage partitionné). Essaie plutôt la connexion par e-mail/mot de passe ci-dessous.");
+    }
+  }).catch((err) => {
+    console.error('Erreur redirection Google :', err);
+    showError(err && err.code ? friendlyError(err.code) : ('Erreur de connexion : ' + (err && err.message ? err.message : 'inconnue')));
   });
 
   // --- Connexion email/mot de passe ---
