@@ -451,9 +451,121 @@
     animation: auth-card-in 0.55s cubic-bezier(.2,.8,.3,1.1) 0.1s forwards;
     max-height: 88vh;
     overflow-y: auto;
+    position: relative;
+    isolation: isolate;
+    transform-style: preserve-3d;
+    will-change: transform;
   }
   @keyframes auth-card-in {
-    to { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(0) rotateX(0) rotateY(0); opacity: 1; }
+  }
+
+  /* Bordure lumineuse qui tourne lentement autour de la carte */
+  .auth-card::before {
+    content: "";
+    position: absolute;
+    inset: -1.5px;
+    border-radius: 21px;
+    padding: 1.5px;
+    background: conic-gradient(from var(--auth-glow-angle, 0deg),
+      transparent 0%, rgba(244,162,89,0.85) 8%, transparent 22%,
+      transparent 60%, rgba(201,83,28,0.6) 72%, transparent 86%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+    animation: auth-glow-spin 7s linear infinite;
+    opacity: 0.9;
+  }
+  @keyframes auth-glow-spin {
+    to { --auth-glow-angle: 360deg; }
+  }
+  @property --auth-glow-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-card::before { animation: none; }
+    .auth-card { transform: none !important; }
+  }
+
+  /* --- Wizard d'inscription en 2 étapes --- */
+  .signup-steps {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .signup-steps .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(233,193,154,0.2);
+    transition: background 0.25s ease, transform 0.25s ease, width 0.25s ease;
+  }
+  .signup-steps .step-dot.active {
+    background: linear-gradient(135deg, #f4a259, #c9531c);
+    width: 20px;
+    border-radius: 4px;
+  }
+  .signup-steps .step-dot.done {
+    background: rgba(244,162,89,0.55);
+  }
+
+  .signup-step {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    animation: signup-step-in 0.35s ease both;
+  }
+  .signup-step.hidden { display: none; }
+  @keyframes signup-step-in {
+    from { opacity: 0; transform: translateX(14px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .signup-step.step-back-anim { animation-name: signup-step-in-back; }
+  @keyframes signup-step-in-back {
+    from { opacity: 0; transform: translateX(-14px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .step-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 2px;
+  }
+  .step-nav .auth-submit.secondary {
+    background: rgba(233,193,154,0.08);
+    color: #e9c19a;
+    box-shadow: none;
+    border: 1px solid rgba(233,193,154,0.18);
+  }
+  .step-nav .auth-submit.secondary:hover {
+    box-shadow: none;
+    background: rgba(233,193,154,0.14);
+  }
+
+  /* --- Jauge de robustesse du mot de passe --- */
+  .pw-strength {
+    height: 4px;
+    border-radius: 3px;
+    background: rgba(233,193,154,0.12);
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .pw-strength-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    background: #d64545;
+    transition: width 0.25s ease, background 0.25s ease;
+  }
+  .pw-strength-label {
+    font-size: 0.7rem;
+    color: #6b5a48;
+    margin-top: 3px;
   }
 
   .auth-header {
@@ -1013,75 +1125,94 @@
       <button type="submit" class="auth-submit" id="loginSubmit">Se connecter</button>
     </form>
 
-    <!-- Formulaire d'inscription détaillé -->
+    <!-- Formulaire d'inscription détaillé, en 2 étapes -->
     <form class="auth-form hidden" id="signupForm">
-      <div class="avatar-picker">
-        <input type="file" id="signupAvatarInput" accept="image/*" hidden>
-        <button type="button" id="avatarPickerBtn" class="avatar-picker-btn">
-          <img id="avatarPreview" src="" alt="" hidden>
-          <span id="avatarPickerPlaceholder">+</span>
-        </button>
-        <span class="avatar-picker-label">Photo de profil (facultatif)</span>
+      <div class="signup-steps">
+        <span class="step-dot active" data-step-dot="1"></span>
+        <span class="step-dot" data-step-dot="2"></span>
       </div>
 
-      <div class="form-row">
-        <div class="form-field">
-          <input type="text" id="signupFirstName" placeholder=" " required autocomplete="given-name">
-          <label>Prénom</label>
+      <!-- Étape 1 : identité -->
+      <div class="signup-step" id="signupStep1">
+        <div class="avatar-picker">
+          <input type="file" id="signupAvatarInput" accept="image/*" hidden>
+          <button type="button" id="avatarPickerBtn" class="avatar-picker-btn">
+            <img id="avatarPreview" src="" alt="" hidden>
+            <span id="avatarPickerPlaceholder">+</span>
+          </button>
+          <span class="avatar-picker-label">Photo de profil (facultatif)</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <input type="text" id="signupFirstName" placeholder=" " required autocomplete="given-name">
+            <label>Prénom</label>
+          </div>
+          <div class="form-field">
+            <input type="text" id="signupLastName" placeholder=" " required autocomplete="family-name">
+            <label>Nom</label>
+          </div>
         </div>
         <div class="form-field">
-          <input type="text" id="signupLastName" placeholder=" " required autocomplete="family-name">
-          <label>Nom</label>
+          <input type="date" id="signupBirthdate" placeholder=" " autocomplete="bday">
+          <label>Date de naissance</label>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <input type="tel" id="signupPhone" placeholder=" " autocomplete="tel">
+            <label>Numéro de téléphone</label>
+          </div>
+          <div class="form-field">
+            <select id="signupGender">
+              <option value="" selected disabled hidden> </option>
+              <option value="femme">Femme</option>
+              <option value="homme">Homme</option>
+              <option value="autre">Autre</option>
+              <option value="ne_precise_pas">Préfère ne pas dire</option>
+            </select>
+            <label>Genre</label>
+          </div>
+        </div>
+        <div class="step-nav">
+          <button type="button" class="auth-submit" id="signupNextBtn">Continuer</button>
         </div>
       </div>
-      <div class="form-field">
-        <input type="date" id="signupBirthdate" placeholder=" " autocomplete="bday">
-        <label>Date de naissance</label>
-      </div>
-      <div class="form-row">
+
+      <!-- Étape 2 : sécurité -->
+      <div class="signup-step hidden" id="signupStep2">
         <div class="form-field">
-          <input type="tel" id="signupPhone" placeholder=" " autocomplete="tel">
-          <label>Numéro de téléphone</label>
-        </div>
-        <div class="form-field">
-          <select id="signupGender">
+          <select id="signupSecurityQuestion">
             <option value="" selected disabled hidden> </option>
-            <option value="femme">Femme</option>
-            <option value="homme">Homme</option>
-            <option value="autre">Autre</option>
-            <option value="ne_precise_pas">Préfère ne pas dire</option>
+            <option value="ville_naissance">Quelle est ta ville de naissance ?</option>
+            <option value="animal_enfance">Quel était le nom de ton premier animal ?</option>
+            <option value="plat_prefere">Quel est ton plat préféré ?</option>
+            <option value="meilleur_ami">Quel est le prénom de ton meilleur ami d'enfance ?</option>
           </select>
-          <label>Genre</label>
+          <label>Question secrète (récupération du mot de passe)</label>
+        </div>
+        <div class="form-field">
+          <input type="text" id="signupSecurityAnswer" placeholder=" " autocomplete="off">
+          <label>Réponse</label>
+        </div>
+        <div class="form-field">
+          <input type="password" id="signupPassword" placeholder=" " required autocomplete="new-password" minlength="6">
+          <label>Mot de passe</label>
+          <div class="pw-strength"><div class="pw-strength-bar" id="pwStrengthBar"></div></div>
+          <div class="pw-strength-label" id="pwStrengthLabel">6 caractères minimum</div>
+        </div>
+        <div class="form-field">
+          <input type="password" id="signupPasswordConfirm" placeholder=" " required autocomplete="new-password" minlength="6">
+          <label>Confirmer le mot de passe</label>
+        </div>
+        <label class="auth-checkbox">
+          <input type="checkbox" id="signupTerms" required>
+          <span>J'accepte les <a href="#" onclick="return false;">conditions d'utilisation</a> et la politique de confidentialité de Piquant.</span>
+        </label>
+        <div class="step-nav">
+          <button type="button" class="auth-submit secondary" id="signupBackBtn">Retour</button>
+          <button type="submit" class="auth-submit" id="signupSubmit">Créer mon compte</button>
         </div>
       </div>
-      <div class="form-field">
-        <select id="signupSecurityQuestion">
-          <option value="" selected disabled hidden> </option>
-          <option value="ville_naissance">Quelle est ta ville de naissance ?</option>
-          <option value="animal_enfance">Quel était le nom de ton premier animal ?</option>
-          <option value="plat_prefere">Quel est ton plat préféré ?</option>
-          <option value="meilleur_ami">Quel est le prénom de ton meilleur ami d'enfance ?</option>
-        </select>
-        <label>Question secrète (récupération du mot de passe)</label>
-      </div>
-      <div class="form-field">
-        <input type="text" id="signupSecurityAnswer" placeholder=" " autocomplete="off">
-        <label>Réponse</label>
-      </div>
-      <div class="form-field">
-        <input type="password" id="signupPassword" placeholder=" " required autocomplete="new-password" minlength="6">
-        <label>Mot de passe</label>
-        <div class="field-hint">6 caractères minimum</div>
-      </div>
-      <div class="form-field">
-        <input type="password" id="signupPasswordConfirm" placeholder=" " required autocomplete="new-password" minlength="6">
-        <label>Confirmer le mot de passe</label>
-      </div>
-      <label class="auth-checkbox">
-        <input type="checkbox" id="signupTerms" required>
-        <span>J'accepte les <a href="#" onclick="return false;">conditions d'utilisation</a> et la politique de confidentialité de Piquant.</span>
-      </label>
-      <button type="submit" class="auth-submit" id="signupSubmit">Créer mon compte</button>
     </form>
 
     <p class="auth-switch-note" id="authSwitchNote">
@@ -1716,6 +1847,90 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     splash.classList.add('fade-out');
   });
 
+  // --- Wizard d'inscription en 2 étapes ---
+  const step1 = document.getElementById('signupStep1');
+  const step2 = document.getElementById('signupStep2');
+  const stepDots = document.querySelectorAll('.step-dot');
+  const nextBtn = document.getElementById('signupNextBtn');
+  const backBtn = document.getElementById('signupBackBtn');
+
+  function goToStep(n) {
+    clearError();
+    if (n === 1) {
+      step2.classList.add('hidden');
+      step1.classList.remove('hidden');
+      step1.classList.remove('step-back-anim');
+      void step1.offsetWidth; // relance l'animation
+      step1.classList.add('step-back-anim');
+    } else {
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      step2.classList.remove('step-back-anim');
+      void step2.offsetWidth;
+    }
+    stepDots.forEach((dot) => {
+      const dotStep = Number(dot.getAttribute('data-step-dot'));
+      dot.classList.toggle('active', dotStep === n);
+      dot.classList.toggle('done', dotStep < n);
+    });
+  }
+
+  nextBtn.addEventListener('click', function () {
+    const firstName = document.getElementById('signupFirstName').value.trim();
+    const lastName = document.getElementById('signupLastName').value.trim();
+    if (!firstName || !lastName) {
+      showError("Renseigne au moins ton prénom et ton nom pour continuer.");
+      return;
+    }
+    goToStep(2);
+  });
+
+  backBtn.addEventListener('click', function () { goToStep(1); });
+
+  // Revenir à l'étape 1 à chaque fois qu'on réouvre le formulaire d'inscription
+  tabSignup.addEventListener('click', function () { goToStep(1); });
+
+  // --- Jauge de robustesse du mot de passe ---
+  const pwInput = document.getElementById('signupPassword');
+  const pwBar = document.getElementById('pwStrengthBar');
+  const pwLabel = document.getElementById('pwStrengthLabel');
+  pwInput.addEventListener('input', function () {
+    const val = pwInput.value;
+    let score = 0;
+    if (val.length >= 6) score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = [
+      { pct: 0,   color: 'rgba(233,193,154,0.12)', text: '6 caractères minimum' },
+      { pct: 20,  color: '#d64545', text: 'Faible' },
+      { pct: 45,  color: '#e08a3e', text: 'Moyen' },
+      { pct: 70,  color: '#e0c23e', text: 'Bon' },
+      { pct: 90,  color: '#7fae5c', text: 'Fort' },
+      { pct: 100, color: '#4f9e5c', text: 'Excellent' },
+    ];
+    const lvl = levels[Math.min(score, levels.length - 1)];
+    pwBar.style.width = val.length === 0 ? '0%' : lvl.pct + '%';
+    pwBar.style.background = lvl.color;
+    pwLabel.textContent = val.length === 0 ? '6 caractères minimum' : lvl.text;
+  });
+
+  // --- Effet de profondeur (tilt) sur la carte, suit le mouvement ---
+  const authCardEl = document.querySelector('.auth-card');
+  if (authCardEl && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.getElementById('authScreen').addEventListener('pointermove', function (e) {
+      const rect = authCardEl.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width - 0.5;
+      const py = (e.clientY - rect.top) / rect.height - 0.5;
+      authCardEl.style.transform = `translateY(0) rotateX(${(-py * 4).toFixed(2)}deg) rotateY(${(px * 4).toFixed(2)}deg)`;
+    });
+    document.getElementById('authScreen').addEventListener('pointerleave', function () {
+      authCardEl.style.transform = 'translateY(0) rotateX(0deg) rotateY(0deg)';
+    });
+  }
+
   // --- Aperçu de la photo de profil choisie ---
   const avatarInput = document.getElementById('signupAvatarInput');
   const avatarPickerBtn = document.getElementById('avatarPickerBtn');
@@ -1938,11 +2153,13 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   // --- Présence : on écrit régulièrement notre statut, on nettoie à la déconnexion ---
   function startPresence(user) {
     const ref = db.collection('presence').doc(user.uid);
-    const name = user.displayName || user.email || 'Utilisateur';
+    const name = user.displayName || 'Utilisateur';
+    const photoURL = user.photoURL || null;
 
     function ping() {
       ref.set({
         name: name,
+        photoURL: photoURL,
         online: true,
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true }).catch(() => {});
@@ -1993,7 +2210,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       const isOnline = u.online && (now - lastSeenMs < PRESENCE_STALE_MS);
       return `
         <div class="user-list-item" data-uid="${uid}">
-          <span class="user-avatar">${avatarLetter(u.name)}<span class="presence-dot ${isOnline ? 'online' : ''}"></span></span>
+          <span class="user-avatar"${u.photoURL ? ` style="background-image:url('${u.photoURL}');background-size:cover;background-position:center;"` : ''}>${u.photoURL ? '' : avatarLetter(u.name)}<span class="presence-dot ${isOnline ? 'online' : ''}"></span></span>
           <span class="user-list-name">${u.name}</span>
           <span class="user-list-status">${isOnline ? 'En ligne' : 'Hors ligne'}</span>
         </div>`;
@@ -2054,7 +2271,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     db.collection('publicMessages').add({
       text: text,
       uid: currentUser.uid,
-      name: currentUser.displayName || currentUser.email || 'Utilisateur',
+      name: currentUser.displayName || 'Utilisateur',
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(() => {});
   }
