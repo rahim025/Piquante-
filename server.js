@@ -9,6 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
+const VISION_MODEL = "gemini-3.1-flash"; // modèle multimodal : comprend texte + images
 
 // Groq est utilisé pour tout le texte (chat + contenu des PDF) : gratuit et sans
 // la limite qui posait problème avec Gemini. Seule la génération d'images reste
@@ -17,7 +18,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const GROQ_MODEL = "openai/gpt-oss-20b";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "12mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // In-memory conversation history per session id (kept simple, no database)
@@ -89,26 +90,34 @@ function detectIntent(message) {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, sessionId } = req.body || {};
-    if (!message || typeof message !== "string" || !message.trim()) {
+    const { message, sessionId, file } = req.body || {};
+    const hasMessage = typeof message === "string" && message.trim();
+    if (!hasMessage && !file) {
       return res.status(400).json({ error: "Message vide." });
     }
     const sid = typeof sessionId === "string" && sessionId ? sessionId : "default";
     if (!sessions.has(sid)) sessions.set(sid, []);
     const history = sessions.get(sid);
 
-    const detectedName = extractNameFromMessage(message);
+    const effectiveMessage = hasMessage ? message : "Analyse ce fichier et aide-moi.";
+
+    const detectedName = extractNameFromMessage(effectiveMessage);
     if (detectedName) setVisitorName(sid, detectedName);
 
-    const intent = detectIntent(message);
+    // Un fichier joint (image ou texte) passe en priorité sur la détection d'intention normale
+    if (file && file.data && file.mimeType) {
+      return await handleFileAnalysisRequest(effectiveMessage, file, history, res, sid);
+    }
+
+    const intent = detectIntent(effectiveMessage);
 
     if (intent === "image") {
-      return await handleImageRequest(message, history, res);
+      return await handleImageRequest(effectiveMessage, history, res);
     }
     if (intent === "pdf") {
-      return await handlePdfRequest(message, history, res);
+      return await handlePdfRequest(effectiveMessage, history, res);
     }
-    return await handleTextRequest(message, history, res, sid);
+    return await handleTextRequest(effectiveMessage, history, res, sid);
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Erreur interne du serveur." });
@@ -286,6 +295,69 @@ async function handleImageRequest(message, history, res) {
     type: "image",
     reply: textPart?.text || "Voici l'image générée :",
     image: dataUrl,
+  });
+}
+
+// ---------- Analyse de fichiers envoyés par l'utilisateur (photo ou texte) ----------
+const MAX_TEXT_FILE_CHARS = 12000; // pour ne pas dépasser le contexte du modèle texte
+
+async function handleFileAnalysisRequest(message, file, history, res, sid) {
+  const isImage = file.mimeType.startsWith("image/");
+  const isText =
+    file.mimeType.startsWith("text/") ||
+    /\.(txt|md|csv|json|js|py|html|css)$/i.test(file.name || "");
+
+  if (isImage) {
+    if (!GEMINI_API_KEY) {
+      const reply = "Aucune clé API Gemini n'est configurée sur le serveur (nécessaire pour analyser les images).";
+      return res.json({ type: "text", reply });
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${VISION_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const { response, data } = await callGeminiWithRetry(url, {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: message },
+            { inlineData: { mimeType: file.mimeType, data: file.data } },
+          ],
+        },
+      ],
+    });
+
+    if (!response.ok) {
+      console.error("Gemini vision API error:", data);
+      return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
+    }
+
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const reply = parts.find((p) => p.text)?.text || "Je n'ai pas réussi à analyser cette image, réessaie.";
+
+    history.push({ role: "user", parts: [{ text: `${message} [Image jointe : ${file.name || "photo"}]` }] });
+    history.push({ role: "model", parts: [{ text: reply }] });
+    while (history.length > MAX_TURNS * 2) history.shift();
+
+    return res.json({ type: "text", reply });
+  }
+
+  if (isText) {
+    let content;
+    try {
+      content = Buffer.from(file.data, "base64").toString("utf-8").slice(0, MAX_TEXT_FILE_CHARS);
+    } catch {
+      return res.status(400).json({ error: "Impossible de lire ce fichier texte." });
+    }
+
+    const combinedMessage =
+      `${message}\n\n--- Contenu du fichier "${file.name || "fichier"}" ---\n${content}`;
+
+    // On réutilise le pipeline texte normal (Groq) en lui donnant le contenu du fichier en contexte.
+    return await handleTextRequest(combinedMessage, history, res, sid);
+  }
+
+  return res.status(400).json({
+    error: "Ce type de fichier n'est pas encore pris en charge. Envoie une image ou un fichier texte (.txt, .md, .csv, .json…).",
   });
 }
 
