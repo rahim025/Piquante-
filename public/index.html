@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <style>
   /* --- Icône hérisson animée (remplace logo.svg dans le header) --- */
   .hedgehog-icon-wrap {
@@ -514,6 +515,43 @@
   }
   .auth-tab-indicator.to-signup { transform: translateX(100%); }
 
+  .avatar-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .avatar-picker-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px dashed rgba(233,193,154,0.4);
+    background: rgba(255,255,255,0.03);
+    color: #e9c19a;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .avatar-picker-btn:hover {
+    border-color: rgba(244,162,89,0.7);
+    transform: scale(1.03);
+  }
+  .avatar-picker-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .avatar-picker-label {
+    font-size: 12px;
+    color: rgba(233,193,154,0.6);
+  }
+
   .google-btn {
     width: 100%;
     display: flex;
@@ -953,26 +991,20 @@
       <button class="auth-tab" id="tabSignup" type="button">Créer un compte</button>
     </div>
 
-    <button class="google-btn" id="googleBtn" type="button">
-      <svg viewBox="0 0 48 48">
-        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
-        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-        <path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.2-7.9l-6.6 5.1C9.5 39.7 16.2 44 24 44z"/>
-        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C39.7 36.9 44 31 44 24c0-1.3-.1-2.7-.4-3.5z"/>
-      </svg>
-      Continuer avec Google
-    </button>
-
-    <div class="auth-divider">ou</div>
-
     <div class="auth-error" id="authError"></div>
     <div class="auth-error" id="configWarning" style="background: rgba(244,162,89,0.12); border-color: rgba(244,162,89,0.35); color: #f4a259;"></div>
 
     <!-- Formulaire de connexion -->
     <form class="auth-form" id="loginForm">
-      <div class="form-field">
-        <input type="email" id="loginEmail" placeholder=" " required autocomplete="email">
-        <label>Adresse e-mail</label>
+      <div class="form-row">
+        <div class="form-field">
+          <input type="text" id="loginFirstName" placeholder=" " required autocomplete="given-name">
+          <label>Prénom</label>
+        </div>
+        <div class="form-field">
+          <input type="text" id="loginLastName" placeholder=" " required autocomplete="family-name">
+          <label>Nom</label>
+        </div>
       </div>
       <div class="form-field">
         <input type="password" id="loginPassword" placeholder=" " required autocomplete="current-password">
@@ -983,6 +1015,15 @@
 
     <!-- Formulaire d'inscription détaillé -->
     <form class="auth-form hidden" id="signupForm">
+      <div class="avatar-picker">
+        <input type="file" id="signupAvatarInput" accept="image/*" hidden>
+        <button type="button" id="avatarPickerBtn" class="avatar-picker-btn">
+          <img id="avatarPreview" src="" alt="" hidden>
+          <span id="avatarPickerPlaceholder">+</span>
+        </button>
+        <span class="avatar-picker-label">Photo de profil (facultatif)</span>
+      </div>
+
       <div class="form-row">
         <div class="form-field">
           <input type="text" id="signupFirstName" placeholder=" " required autocomplete="given-name">
@@ -994,12 +1035,38 @@
         </div>
       </div>
       <div class="form-field">
-        <input type="email" id="signupEmail" placeholder=" " required autocomplete="email">
-        <label>Adresse e-mail</label>
-      </div>
-      <div class="form-field">
         <input type="date" id="signupBirthdate" placeholder=" " autocomplete="bday">
         <label>Date de naissance</label>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <input type="tel" id="signupPhone" placeholder=" " autocomplete="tel">
+          <label>Numéro de téléphone</label>
+        </div>
+        <div class="form-field">
+          <select id="signupGender">
+            <option value="" selected disabled hidden> </option>
+            <option value="femme">Femme</option>
+            <option value="homme">Homme</option>
+            <option value="autre">Autre</option>
+            <option value="ne_precise_pas">Préfère ne pas dire</option>
+          </select>
+          <label>Genre</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <select id="signupSecurityQuestion">
+          <option value="" selected disabled hidden> </option>
+          <option value="ville_naissance">Quelle est ta ville de naissance ?</option>
+          <option value="animal_enfance">Quel était le nom de ton premier animal ?</option>
+          <option value="plat_prefere">Quel est ton plat préféré ?</option>
+          <option value="meilleur_ami">Quel est le prénom de ton meilleur ami d'enfance ?</option>
+        </select>
+        <label>Question secrète (récupération du mot de passe)</label>
+      </div>
+      <div class="form-field">
+        <input type="text" id="signupSecurityAnswer" placeholder=" " autocomplete="off">
+        <label>Réponse</label>
       </div>
       <div class="form-field">
         <input type="password" id="signupPassword" placeholder=" " required autocomplete="new-password" minlength="6">
@@ -1560,7 +1627,6 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const authSwitchNote = document.getElementById('authSwitchNote');
   const switchToSignup = document.getElementById('switchToSignup');
   const authError = document.getElementById('authError');
-  const googleBtn = document.getElementById('googleBtn');
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   const sidebarUserName = document.getElementById('sidebarUserName');
   const logoutBtn = document.getElementById('logoutBtn');
@@ -1568,7 +1634,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const guestBtn = document.getElementById('guestBtn');
 
   if (FIREBASE_NOT_CONFIGURED) {
-    configWarning.textContent = "⚠️ Firebase n'est pas encore configuré : la connexion Google et par e-mail ne fonctionneront pas tant que vous n'aurez pas remplacé les clés REMPLACEZ_MOI dans le code (voir instructions).";
+    configWarning.textContent = "⚠️ Firebase n'est pas encore configuré : la connexion ne fonctionnera pas tant que vous n'aurez pas remplacé les clés REMPLACEZ_MOI dans le code (voir instructions).";
     configWarning.classList.add('show');
   }
 
@@ -1615,16 +1681,28 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
   function friendlyError(code) {
     const map = {
-      'auth/invalid-email': "Adresse e-mail invalide.",
-      'auth/user-not-found': "Aucun compte ne correspond à cet e-mail.",
+      'auth/invalid-email': "Prénom ou nom invalide.",
+      'auth/user-not-found': "Aucun compte ne correspond à ce prénom et nom.",
       'auth/wrong-password': "Mot de passe incorrect.",
-      'auth/email-already-in-use': "Un compte existe déjà avec cet e-mail.",
+      'auth/email-already-in-use': "Ce prénom et nom sont déjà utilisés. Essaie d'ajouter une initiale (ex : Jean K.).",
       'auth/weak-password': "Le mot de passe doit contenir au moins 6 caractères.",
-      'auth/popup-closed-by-user': "Connexion Google annulée.",
-      'auth/invalid-credential': "Identifiants incorrects.",
+      'auth/invalid-credential': "Prénom, nom ou mot de passe incorrect.",
       'auth/network-request-failed': "Problème de connexion réseau."
     };
     return map[code] || "Une erreur est survenue. Réessaie.";
+  }
+
+  // Construit un identifiant technique (au format email, exigé par Firebase)
+  // à partir du prénom et du nom — invisible pour l'utilisateur, qui ne voit
+  // jamais qu'il s'agit d'une adresse e-mail.
+  function nameToLoginId(firstName, lastName) {
+    const normalize = (s) =>
+      s
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // enlève les accents
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '');
+    return `${normalize(firstName)}.${normalize(lastName)}@piquant-users.app`;
   }
 
   // --- Utiliser sans compte (mode invité) ---
@@ -1638,30 +1716,38 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     splash.classList.add('fade-out');
   });
 
-  // --- Connexion Google ---
-  // Sur mobile, les popups sont peu fiables (bloquées ou fermées par erreur).
-  // On utilise donc la redirection, plus stable sur téléphone.
-  googleBtn.addEventListener('click', function () {
-    clearError();
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider).catch((err) => showError(friendlyError(err.code)));
+  // --- Aperçu de la photo de profil choisie ---
+  const avatarInput = document.getElementById('signupAvatarInput');
+  const avatarPickerBtn = document.getElementById('avatarPickerBtn');
+  const avatarPreview = document.getElementById('avatarPreview');
+  const avatarPlaceholder = document.getElementById('avatarPickerPlaceholder');
+  let selectedAvatarFile = null;
+
+  avatarPickerBtn.addEventListener('click', () => avatarInput.click());
+  avatarInput.addEventListener('change', function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    selectedAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatarPreview.src = e.target.result;
+      avatarPreview.hidden = false;
+      avatarPlaceholder.hidden = true;
+    };
+    reader.readAsDataURL(file);
   });
 
-  // Après la redirection vers Google puis le retour sur le site, Firebase
-  // traite le résultat ici. On affiche une erreur claire si besoin.
-  auth.getRedirectResult().catch((err) => {
-    if (err && err.code) showError(friendlyError(err.code));
-  });
-
-  // --- Connexion email/mot de passe ---
+  // --- Connexion par prénom + nom ---
   loginForm.addEventListener('submit', function (e) {
     e.preventDefault();
     clearError();
-    const email = document.getElementById('loginEmail').value.trim();
+    const firstName = document.getElementById('loginFirstName').value.trim();
+    const lastName = document.getElementById('loginLastName').value.trim();
     const password = document.getElementById('loginPassword').value;
+    const loginId = nameToLoginId(firstName, lastName);
     const btn = document.getElementById('loginSubmit');
     btn.disabled = true;
-    auth.signInWithEmailAndPassword(email, password)
+    auth.signInWithEmailAndPassword(loginId, password)
       .catch((err) => showError(friendlyError(err.code)))
       .finally(() => { btn.disabled = false; });
   });
@@ -1672,7 +1758,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     clearError();
     const firstName = document.getElementById('signupFirstName').value.trim();
     const lastName = document.getElementById('signupLastName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
+    const birthdate = document.getElementById('signupBirthdate').value;
+    const phone = document.getElementById('signupPhone').value.trim();
+    const gender = document.getElementById('signupGender').value;
+    const securityQuestion = document.getElementById('signupSecurityQuestion').value;
+    const securityAnswer = document.getElementById('signupSecurityAnswer').value.trim();
     const password = document.getElementById('signupPassword').value;
     const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
     const termsOk = document.getElementById('signupTerms').checked;
@@ -1685,11 +1775,48 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       showError("Merci d'accepter les conditions d'utilisation.");
       return;
     }
+    if (!securityQuestion || !securityAnswer) {
+      showError("Choisis une question secrète et réponds-y (utile pour récupérer ton compte).");
+      return;
+    }
 
+    const signupId = nameToLoginId(firstName, lastName);
     const btn = document.getElementById('signupSubmit');
     btn.disabled = true;
-    auth.createUserWithEmailAndPassword(email, password)
-      .then((cred) => cred.user.updateProfile({ displayName: `${firstName} ${lastName}`.trim() }))
+
+    let createdUser = null;
+
+    auth.createUserWithEmailAndPassword(signupId, password)
+      .then((cred) => {
+        createdUser = cred.user;
+        return createdUser.updateProfile({ displayName: `${firstName} ${lastName}`.trim() });
+      })
+      .then(() => {
+        // Photo de profil facultative : envoyée sur Firebase Storage
+        if (selectedAvatarFile) {
+          const storageRef = firebase.storage().ref(`avatars/${createdUser.uid}`);
+          return storageRef.put(selectedAvatarFile)
+            .then((snap) => snap.ref.getDownloadURL())
+            .then((url) => createdUser.updateProfile({ photoURL: url }))
+            .catch((err) => {
+              console.error("Échec de l'envoi de la photo :", err);
+              // On continue même si la photo échoue, ce n'est pas bloquant.
+            });
+        }
+      })
+      .then(() => {
+        // Infos complémentaires stockées dans Firestore (pas dans Auth)
+        return firebase.firestore().collection('users').doc(createdUser.uid).set({
+          firstName,
+          lastName,
+          birthdate: birthdate || null,
+          phone: phone || null,
+          gender: gender || null,
+          securityQuestion,
+          securityAnswer: securityAnswer.toLowerCase(),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      })
       .catch((err) => showError(friendlyError(err.code)))
       .finally(() => { btn.disabled = false; });
   });
@@ -1727,9 +1854,17 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     authResolved = true;
     isLoggedIn = !!user;
     if (user) {
-      const name = user.displayName || user.email || 'Utilisateur';
+      const name = user.displayName || 'Utilisateur';
       sidebarUserName.textContent = name;
-      sidebarAvatar.textContent = name.trim().charAt(0).toUpperCase();
+      if (user.photoURL) {
+        sidebarAvatar.style.backgroundImage = `url(${user.photoURL})`;
+        sidebarAvatar.style.backgroundSize = 'cover';
+        sidebarAvatar.style.backgroundPosition = 'center';
+        sidebarAvatar.textContent = '';
+      } else {
+        sidebarAvatar.style.backgroundImage = '';
+        sidebarAvatar.textContent = name.trim().charAt(0).toUpperCase();
+      }
       authScreen.classList.remove('visible');
       appRoot.classList.remove('app-hidden');
       if (window.PiquantCommunity) window.PiquantCommunity.onLogin(user);
