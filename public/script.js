@@ -5,6 +5,70 @@
   const input = document.getElementById("composerInput");
   const sendBtn = document.getElementById("sendBtn");
   const resetBtn = document.getElementById("resetBtn");
+  const attachBtn = document.getElementById("attachBtn");
+  const fileInput = document.getElementById("fileInput");
+  const filePreviewRow = document.getElementById("filePreviewRow");
+
+  let pendingFile = null; // { name, mimeType, data (base64 sans préfixe), previewUrl }
+
+  attachBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files && fileInput.files[0];
+    fileInput.value = ""; // permet de resélectionner le même fichier plus tard
+    if (!file) return;
+
+    const MAX_SIZE = 8 * 1024 * 1024; // 8 Mo
+    if (file.size > MAX_SIZE) {
+      alert("Ce fichier est trop volumineux (8 Mo maximum).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const base64 = dataUrl.split(",")[1];
+      pendingFile = {
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        data: base64,
+        previewUrl: file.type.startsWith("image/") ? dataUrl : null,
+      };
+      renderFilePreview();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function renderFilePreview() {
+    if (!pendingFile) {
+      filePreviewRow.style.display = "none";
+      filePreviewRow.innerHTML = "";
+      return;
+    }
+    filePreviewRow.style.display = "flex";
+    filePreviewRow.innerHTML = "";
+    const chip = document.createElement("div");
+    chip.className = "file-preview-chip";
+    if (pendingFile.previewUrl) {
+      const img = document.createElement("img");
+      img.src = pendingFile.previewUrl;
+      chip.appendChild(img);
+    }
+    const name = document.createElement("span");
+    name.className = "fpc-name";
+    name.textContent = pendingFile.name;
+    chip.appendChild(name);
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "fpc-remove";
+    removeBtn.textContent = "✕";
+    removeBtn.addEventListener("click", () => {
+      pendingFile = null;
+      renderFilePreview();
+    });
+    chip.appendChild(removeBtn);
+    filePreviewRow.appendChild(chip);
+  }
 
   const sessionId =
     sessionStorage.getItem("piquant_session") ||
@@ -78,7 +142,7 @@
     }
   }
 
-  function addMessage(role, text) {
+  function addMessage(role, text, attachment) {
     if (intro && !intro.dataset.hidden) {
       intro.style.display = "none";
       intro.dataset.hidden = "true";
@@ -95,6 +159,22 @@
     } else {
       bubble.textContent = text;
     }
+
+    if (attachment) {
+      if (attachment.previewUrl) {
+        const img = document.createElement("img");
+        img.src = attachment.previewUrl;
+        img.className = "msg-attachment-img";
+        img.alt = attachment.name;
+        bubble.appendChild(img);
+      } else {
+        const fileTag = document.createElement("div");
+        fileTag.className = "msg-attachment-file";
+        fileTag.textContent = `📎 ${attachment.name}`;
+        bubble.appendChild(fileTag);
+      }
+    }
+
     wrap.appendChild(label);
     wrap.appendChild(bubble);
 
@@ -159,20 +239,29 @@
   }
 
   async function sendMessage(text) {
-    if (busy || !text.trim()) return;
+    const fileToSend = pendingFile;
+    if (busy || (!text.trim() && !fileToSend)) return;
     busy = true;
     sendBtn.disabled = true;
 
-    addMessage("user", text);
+    addMessage("user", text.trim() || (fileToSend ? `Fichier joint : ${fileToSend.name}` : ""), fileToSend);
     input.value = "";
     autoGrow();
+    pendingFile = null;
+    renderFilePreview();
     addThinking();
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, sessionId }),
+        body: JSON.stringify({
+          message: text,
+          sessionId,
+          file: fileToSend
+            ? { name: fileToSend.name, mimeType: fileToSend.mimeType, data: fileToSend.data }
+            : undefined,
+        }),
       });
       const data = await res.json();
       removeThinking();
