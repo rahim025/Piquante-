@@ -4,24 +4,89 @@ const crypto = require("crypto");
 const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const googleTTS = require("google-tts-api");
+const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
-const IMAGE_MODEL = "gemini-3.1-flash-image";
-const VISION_MODEL = "gemini-3.1-flash"; // modèle multimodal : comprend texte + images
 
 // Groq est utilisé pour tout le texte (chat + contenu des PDF) : gratuit et sans
-// la limite qui posait problème avec Gemini. Seule la génération d'images reste
-// sur Gemini, car Groq ne sait pas générer d'images.
+// limite bloquante. Les images passent désormais par Pollinations.ai, gratuit
+// et sans clé API du tout (voir handleImageRequest).
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const GROQ_MODEL = "openai/gpt-oss-20b";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-app.use(express.json({ limit: "12mb" }));
+// ---------- Base de données (historique des conversations) ----------
+// Utilise Postgres (ex: Neon, gratuit) via la variable d'environnement
+// DATABASE_URL. Si elle n'est pas définie, le site continue de fonctionner
+// normalement mais sans historique persistant (juste la mémoire courte du
+// serveur pendant qu'il tourne).
+const DATABASE_URL = process.env.DATABASE_URL || "";
+const pool = DATABASE_URL
+  ? new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : null;
+
+async function initDb() {
+  if (!pool) {
+    console.warn(
+      "DATABASE_URL non configurée : l'historique des conversations ne sera pas sauvegardé."
+    );
+    return;
+  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS conversations (
+      id TEXT PRIMARY KEY,
+      visitor_id TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT 'Nouvelle conversation',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_conversations_visitor ON conversations(visitor_id);`);
+  console.log("Base de données prête (historique des conversations activé).");
+}
+initDb().catch((err) => console.error("Erreur d'initialisation de la base :", err));
+
+async function ensureConversation(conversationId, visitorId, firstMessage) {
+  if (!pool) return conversationId || crypto.randomUUID();
+  const id = conversationId || crypto.randomUUID();
+  const title = (firstMessage || "Nouvelle conversation").trim().slice(0, 60) || "Nouvelle conversation";
+  await pool.query(
+    `INSERT INTO conversations (id, visitor_id, title) VALUES ($1, $2, $3)
+     ON CONFLICT (id) DO NOTHING`,
+    [id, visitorId || "anonyme", title]
+  );
+  return id;
+}
+
+async function saveMessage(conversationId, role, content) {
+  if (!pool || !conversationId) return;
+  try {
+    await pool.query(
+      `INSERT INTO messages (conversation_id, role, content) VALUES ($1, $2, $3)`,
+      [conversationId, role, content]
+    );
+    await pool.query(`UPDATE conversations SET updated_at = now() WHERE id = $1`, [conversationId]);
+  } catch (err) {
+    console.error("Erreur de sauvegarde du message :", err);
+  }
+}
+
+app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// In-memory conversation history per session id (kept simple, no database)
+// In-memory conversation context per conversation id (accélère les échanges
+// pendant que le serveur tourne ; la base de données garde l'historique complet)
 const sessions = new Map();
 const MAX_TURNS = 12; // how many past exchanges we keep per session
 
@@ -30,9 +95,6 @@ const pdfStore = new Map();
 const audioStore = new Map();
 
 // ---------- Visitor memory (name), persisted to a small JSON file ----------
-// Note: on Render's free tier this file lives on ephemeral disk — it survives
-// while the service stays up, but resets on redeploy. Good enough to
-// remember a visitor's name during a session/day; not a permanent database.
 const VISITOR_FILE = path.join(__dirname, "visitor_memory.json");
 
 function loadVisitorDB() {
@@ -88,36 +150,76 @@ function detectIntent(message) {
   return "text";
 }
 
+// ---------- Historique des conversations (menu latéral) ----------
+app.get("/api/conversations", async (req, res) => {
+  try {
+    if (!pool) return res.json({ conversations: [] });
+    const { visitorId } = req.query;
+    if (!visitorId) return res.json({ conversations: [] });
+    const { rows } = await pool.query(
+      `SELECT id, title, updated_at FROM conversations WHERE visitor_id = $1 ORDER BY updated_at DESC LIMIT 50`,
+      [visitorId]
+    );
+    res.json({ conversations: rows });
+  } catch (err) {
+    console.error("Erreur de récupération des conversations:", err);
+    res.status(500).json({ conversations: [] });
+  }
+});
+
+app.get("/api/conversations/:id/messages", async (req, res) => {
+  try {
+    if (!pool) return res.json({ messages: [] });
+    const { rows } = await pool.query(
+      `SELECT role, content FROM messages WHERE conversation_id = $1 ORDER BY id ASC`,
+      [req.params.id]
+    );
+    res.json({ messages: rows });
+  } catch (err) {
+    console.error("Erreur de récupération des messages:", err);
+    res.status(500).json({ messages: [] });
+  }
+});
+
+app.delete("/api/conversations/:id", async (req, res) => {
+  try {
+    if (!pool) return res.json({ ok: true });
+    await pool.query(`DELETE FROM conversations WHERE id = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur de suppression:", err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, sessionId, file } = req.body || {};
-    const hasMessage = typeof message === "string" && message.trim();
-    if (!hasMessage && !file) {
+    const { message, visitorId } = req.body || {};
+    let { conversationId } = req.body || {};
+    if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({ error: "Message vide." });
     }
-    const sid = typeof sessionId === "string" && sessionId ? sessionId : "default";
+
+    conversationId = await ensureConversation(conversationId, visitorId, message);
+
+    const sid = conversationId;
     if (!sessions.has(sid)) sessions.set(sid, []);
     const history = sessions.get(sid);
 
-    const effectiveMessage = hasMessage ? message : "Analyse ce fichier et aide-moi.";
+    const detectedName = extractNameFromMessage(message);
+    if (detectedName) setVisitorName(visitorId || sid, detectedName);
 
-    const detectedName = extractNameFromMessage(effectiveMessage);
-    if (detectedName) setVisitorName(sid, detectedName);
+    await saveMessage(conversationId, "user", message);
 
-    // Un fichier joint (image ou texte) passe en priorité sur la détection d'intention normale
-    if (file && file.data && file.mimeType) {
-      return await handleFileAnalysisRequest(effectiveMessage, file, history, res, sid);
-    }
-
-    const intent = detectIntent(effectiveMessage);
+    const intent = detectIntent(message);
 
     if (intent === "image") {
-      return await handleImageRequest(effectiveMessage, history, res);
+      return await handleImageRequest(message, history, res, conversationId);
     }
     if (intent === "pdf") {
-      return await handlePdfRequest(effectiveMessage, history, res);
+      return await handlePdfRequest(message, history, res, conversationId);
     }
-    return await handleTextRequest(effectiveMessage, history, res, sid);
+    return await handleTextRequest(message, history, res, sid, conversationId, visitorId);
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Erreur interne du serveur." });
@@ -141,46 +243,12 @@ function nowLabels() {
   return { todayLabel, timeLabel };
 }
 
-function friendlyApiError(response, data) {
-  if (response.status === 429) {
-    return "Il y a trop de demandes en ce moment (limite gratuite atteinte). Réessaie dans une minute.";
-  }
-  return data?.error?.message || "Erreur lors de l'appel à l'IA.";
-}
-
 const FALLBACK_REPLY = "Je suis là ! 😊 Il y a un petit souci de mon côté en ce moment — reformule ta question ou réessaie dans quelques secondes.";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Calls the Gemini API, retrying automatically on rate limits (429) or
-// temporary server errors (5xx) so a busy moment doesn't just fail outright.
-async function callGeminiWithRetry(url, body, { retries = 2, baseDelay = 2000 } = {}) {
-  let lastResponse, lastData;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await response.json();
-
-    if (response.ok) return { response, data };
-
-    lastResponse = response;
-    lastData = data;
-
-    const retryable = response.status === 429 || response.status >= 500;
-    if (!retryable || attempt === retries) break;
-
-    await sleep(baseDelay * (attempt + 1));
-  }
-  return { response: lastResponse, data: lastData };
-}
-
-// Calls Groq's OpenAI-compatible chat completions endpoint, retrying on
-// rate limits (429) or temporary server errors (5xx).
 async function callGroqWithRetry(messages, { retries = 2, baseDelay = 2000 } = {}) {
   let lastResponse, lastData;
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -212,8 +280,6 @@ async function callGroqWithRetry(messages, { retries = 2, baseDelay = 2000 } = {
   return { response: lastResponse, data: lastData };
 }
 
-// Converts our Gemini-style history ({role, parts:[{text}]}) into the
-// OpenAI-style messages array Groq expects ({role, content}).
 function historyToGroqMessages(history, systemText) {
   const messages = [{ role: "system", content: systemText }];
   for (const turn of history) {
@@ -225,7 +291,7 @@ function historyToGroqMessages(history, systemText) {
   return messages;
 }
 
-async function handleTextRequest(message, history, res, sid) {
+async function handleTextRequest(message, history, res, sid, conversationId, visitorId) {
   history.push({ role: "user", parts: [{ text: message }] });
   while (history.length > MAX_TURNS * 2) history.shift();
 
@@ -233,15 +299,18 @@ async function handleTextRequest(message, history, res, sid) {
     const reply =
       "Aucune clé API n'est configurée sur le serveur. Ajoute GROQ_API_KEY dans les variables d'environnement de Render.";
     history.push({ role: "model", parts: [{ text: reply }] });
-    return res.json({ type: "text", reply });
+    return res.json({ type: "text", reply, conversationId });
   }
 
   const { todayLabel, timeLabel } = nowLabels();
-  const visitorName = sid ? getVisitorName(sid) : null;
+  const visitorName = getVisitorName(visitorId || sid);
   const nameLine = visitorName ? ` Le visiteur s'appelle ${visitorName} — adresse-toi à lui par son prénom quand c'est naturel.` : "";
 
   const systemText =
-    `Tu es un assistant IA utile, chaleureux et clair, qui répond aux visiteurs d'un site web. Réponds dans la langue du visiteur. Sois concis mais complet. ` +
+    `Tu es Piquant, un assistant IA au ton posé, direct et raffiné — pas robotique, pas bavard. ` +
+    `Style : phrases courtes et précises, vocabulaire soigné sans être pompeux, jamais de flatterie ni de formules creuses ("excellente question", "je suis ravi de vous aider"). Va droit au fait dès la première phrase. ` +
+    `Structure tes réponses avec des paragraphes courts ou des listes quand c'est utile, jamais pour faire joli. Si un sujet est incertain ou débattu, dis-le clairement plutôt que d'inventer une certitude. ` +
+    `Réponds dans la langue du visiteur. Sois concis mais complet. ` +
     `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure du Bénin, UTC+1). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais. ` +
     `Si on te demande qui t'a créé, qui est ton créateur/développeur, ou qui a fait ce site, réponds que c'est Rahim Batchabi. ` +
     `Si on te demande qui est l'actuel président du Bénin, réponds que c'est Romuald Wadagni, en fonction depuis le 24 mai 2026. ` +
@@ -252,116 +321,57 @@ async function handleTextRequest(message, history, res, sid) {
 
   if (!response.ok) {
     console.error("Groq API error:", data);
-    // After retries, don't dead-end the visitor with a raw error — respond warmly instead.
     history.push({ role: "model", parts: [{ text: FALLBACK_REPLY }] });
-    return res.json({ type: "text", reply: FALLBACK_REPLY });
+    await saveMessage(conversationId, "model", FALLBACK_REPLY);
+    return res.json({ type: "text", reply: FALLBACK_REPLY, conversationId });
   }
 
   const reply = data?.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer de réponse.";
 
   history.push({ role: "model", parts: [{ text: reply }] });
-  res.json({ type: "text", reply });
+  await saveMessage(conversationId, "model", reply);
+  res.json({ type: "text", reply, conversationId });
 }
 
-async function handleImageRequest(message, history, res) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const { response, data } = await callGeminiWithRetry(url, {
-    contents: [{ role: "user", parts: [{ text: message }] }],
-  });
-
-  if (!response.ok) {
-    console.error("Gemini image API error:", data);
-    return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
-  }
-
-  const parts = data?.candidates?.[0]?.content?.parts || [];
-  const imagePart = parts.find((p) => p.inlineData);
-  const textPart = parts.find((p) => p.text);
-
-  if (!imagePart) {
-    return res.status(502).json({
-      error: "L'IA n'a pas pu générer d'image pour cette demande (essaie de reformuler).",
-    });
-  }
-
-  const dataUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-
-  history.push({ role: "user", parts: [{ text: message }] });
-  history.push({ role: "model", parts: [{ text: "[Image générée]" }] });
-  while (history.length > MAX_TURNS * 2) history.shift();
-
-  res.json({
-    type: "image",
-    reply: textPart?.text || "Voici l'image générée :",
-    image: dataUrl,
-  });
-}
-
-// ---------- Analyse de fichiers envoyés par l'utilisateur (photo ou texte) ----------
-const MAX_TEXT_FILE_CHARS = 12000; // pour ne pas dépasser le contexte du modèle texte
-
-async function handleFileAnalysisRequest(message, file, history, res, sid) {
-  const isImage = file.mimeType.startsWith("image/");
-  const isText =
-    file.mimeType.startsWith("text/") ||
-    /\.(txt|md|csv|json|js|py|html|css)$/i.test(file.name || "");
-
-  if (isImage) {
-    if (!GEMINI_API_KEY) {
-      const reply = "Aucune clé API Gemini n'est configurée sur le serveur (nécessaire pour analyser les images).";
-      return res.json({ type: "text", reply });
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${VISION_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-    const { response, data } = await callGeminiWithRetry(url, {
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: message },
-            { inlineData: { mimeType: file.mimeType, data: file.data } },
-          ],
-        },
-      ],
-    });
+async function handleImageRequest(message, history, res, conversationId) {
+  try {
+    // Pollinations.ai : génération d'images gratuite, sans clé API, sans compte.
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(message)}?width=1024&height=1024&nologo=true&model=flux`;
+    const response = await fetch(url);
 
     if (!response.ok) {
-      console.error("Gemini vision API error:", data);
-      return res.status(response.status === 429 ? 429 : 502).json({ error: friendlyApiError(response, data) });
+      console.error("Pollinations image error:", response.status, response.statusText);
+      return res.status(502).json({
+        error: "Le service d'images est temporairement indisponible. Réessaie dans un instant.",
+      });
     }
 
-    const parts = data?.candidates?.[0]?.content?.parts || [];
-    const reply = parts.find((p) => p.text)?.text || "Je n'ai pas réussi à analyser cette image, réessaie.";
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    const dataUrl = `data:${contentType};base64,${base64}`;
 
-    history.push({ role: "user", parts: [{ text: `${message} [Image jointe : ${file.name || "photo"}]` }] });
-    history.push({ role: "model", parts: [{ text: reply }] });
+    history.push({ role: "user", parts: [{ text: message }] });
+    history.push({ role: "model", parts: [{ text: "[Image générée]" }] });
     while (history.length > MAX_TURNS * 2) history.shift();
 
-    return res.json({ type: "text", reply });
+    await saveMessage(conversationId, "model", "[Image générée]");
+
+    res.json({
+      type: "image",
+      reply: "Voici l'image générée :",
+      image: dataUrl,
+      conversationId,
+    });
+  } catch (err) {
+    console.error("Image generation error:", err);
+    res.status(502).json({
+      error: "Impossible de générer l'image pour cette demande (essaie de reformuler).",
+    });
   }
-
-  if (isText) {
-    let content;
-    try {
-      content = Buffer.from(file.data, "base64").toString("utf-8").slice(0, MAX_TEXT_FILE_CHARS);
-    } catch {
-      return res.status(400).json({ error: "Impossible de lire ce fichier texte." });
-    }
-
-    const combinedMessage =
-      `${message}\n\n--- Contenu du fichier "${file.name || "fichier"}" ---\n${content}`;
-
-    // On réutilise le pipeline texte normal (Groq) en lui donnant le contenu du fichier en contexte.
-    return await handleTextRequest(combinedMessage, history, res, sid);
-  }
-
-  return res.status(400).json({
-    error: "Ce type de fichier n'est pas encore pris en charge. Envoie une image ou un fichier texte (.txt, .md, .csv, .json…).",
-  });
 }
 
-async function handlePdfRequest(message, history, res) {
+async function handlePdfRequest(message, history, res, conversationId) {
   if (!GROQ_API_KEY) {
     return res.status(500).json({
       error: "Aucune clé API n'est configurée sur le serveur. Ajoute GROQ_API_KEY dans les variables d'environnement.",
@@ -397,17 +407,19 @@ async function handlePdfRequest(message, history, res) {
   doc.on("data", (chunk) => buffers.push(chunk));
   doc.on("end", () => {
     pdfStore.set(id, Buffer.concat(buffers));
-    // free memory after 15 minutes if never downloaded
     setTimeout(() => pdfStore.delete(id), 15 * 60 * 1000);
 
     history.push({ role: "user", parts: [{ text: message }] });
     history.push({ role: "model", parts: [{ text: "[Document PDF généré]" }] });
     while (history.length > MAX_TURNS * 2) history.shift();
 
+    saveMessage(conversationId, "model", "[Document PDF généré]");
+
     res.json({
       type: "pdf",
       reply: "Voici ton document, prêt à télécharger :",
       pdfUrl: `/api/download/${id}.pdf`,
+      conversationId,
     });
   });
 
@@ -425,7 +437,7 @@ app.get("/api/download/:id.pdf", (req, res) => {
 
 // ---------- Voice: read a message aloud ----------
 async function synthesizeSpeech(text) {
-  const clean = text.slice(0, 600); // keep clips reasonably short
+  const clean = text.slice(0, 600);
   const urls = googleTTS.getAllAudioUrls(clean, {
     lang: "fr",
     slow: false,
