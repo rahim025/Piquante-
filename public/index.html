@@ -808,6 +808,163 @@
     transform: translateY(0);
   }
 
+  /* ============================================================
+     SCÈNE INSCRIPTION : personnage qui arrive avec une valise
+     ============================================================ */
+  .briefcase-scene {
+    position: relative;
+    width: 100%;
+    height: 58px;
+    margin-bottom: 4px;
+  }
+  .briefcase-scene.hidden { display: none; }
+
+  .bc-walker {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: 40px;
+    height: 44px;
+    transform: translate(calc(-50% - 70px), 0);
+    animation: bc-walk-in 1.3s cubic-bezier(.45,0,.2,1) forwards;
+  }
+  @keyframes bc-walk-in {
+    to { transform: translate(-50%, 0); }
+  }
+
+  .bc-shadow {
+    position: absolute;
+    left: 6px;
+    bottom: -2px;
+    width: 30px;
+    height: 4px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.45), transparent 75%);
+  }
+
+  .bc-person {
+    position: absolute;
+    left: 6px;
+    bottom: 4px;
+    width: 20px;
+    height: 34px;
+    animation: bc-walk-cycle 0.4s ease-in-out 6, bc-lean 0.5s ease 1.3s forwards;
+  }
+  @keyframes bc-walk-cycle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-1.5px) rotate(0deg); }
+  }
+  /* Une fois arrivé : le personnage s'incline légèrement, adossé */
+  @keyframes bc-lean {
+    to { transform: translateY(0) rotate(-6deg); }
+  }
+
+  .bc-head {
+    position: absolute;
+    top: 0;
+    left: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e9c19a;
+  }
+  .bc-torso {
+    position: absolute;
+    top: 9px;
+    left: 3px;
+    width: 14px;
+    height: 16px;
+    border-radius: 6px 6px 4px 4px;
+    background: linear-gradient(160deg, #c9531c, #7c3614);
+  }
+  .bc-arm-hold {
+    position: absolute;
+    top: 13px;
+    left: 15px;
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    background: #c9531c;
+    transform-origin: top center;
+  }
+  .bc-leg {
+    position: absolute;
+    top: 24px;
+    width: 4px;
+    height: 11px;
+    border-radius: 2px;
+    background: #4a3627;
+    transform-origin: top center;
+    animation: bc-leg-step 0.4s ease-in-out infinite;
+  }
+  .bc-leg-a { left: 5px; animation-delay: 0s; }
+  .bc-leg-b { left: 11px; animation-delay: 0.2s; }
+  @keyframes bc-leg-step {
+    0%, 100% { transform: rotate(-18deg); }
+    50%      { transform: rotate(18deg); }
+  }
+  /* Jambes et démarche s'arrêtent une fois arrivé */
+  .bc-walker.arrived .bc-leg { animation: none; transform: rotate(0deg); }
+  .bc-walker.arrived .bc-person { animation: bc-lean 0.5s ease forwards; }
+
+  .bc-case {
+    position: absolute;
+    left: 20px;
+    bottom: 4px;
+    width: 13px;
+    height: 10px;
+    border-radius: 2px;
+    background: linear-gradient(160deg, #a9754b, #7c5432);
+    border: 1px solid rgba(0,0,0,0.25);
+    transform-origin: bottom left;
+    animation: bc-case-carry 0.4s ease-in-out infinite;
+  }
+  .bc-case-handle {
+    position: absolute;
+    top: -3px;
+    left: 4px;
+    width: 5px;
+    height: 3px;
+    border: 1.4px solid #4a3627;
+    border-bottom: none;
+    border-radius: 2px 2px 0 0;
+  }
+  @keyframes bc-case-carry {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-1px) rotate(-3deg); }
+  }
+  /* La valise se pose au sol : elle tombe puis rebondit légèrement */
+  .bc-walker.arrived .bc-case {
+    animation: bc-case-drop 0.5s cubic-bezier(.34,1.4,.4,1) forwards;
+  }
+  @keyframes bc-case-drop {
+    0%   { transform: translate(0, -4px) rotate(-3deg); }
+    60%  { transform: translate(2px, 1px) rotate(2deg); }
+    100% { transform: translate(2px, 0) rotate(0deg); }
+  }
+
+  /* Petites icônes qui "sortent" de la valise en pop */
+  .bc-pop {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    font-size: 11px;
+    color: #f4a259;
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), 0) scale(0.4);
+    animation: bc-pop-out 0.6s ease 1.75s forwards;
+  }
+  @keyframes bc-pop-out {
+    0%   { opacity: 0; transform: translate(calc(-50% + var(--dx)), 0) scale(0.3); }
+    50%  { opacity: 1; transform: translate(calc(-50% + var(--dx)), -22px) scale(1.1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), -34px) scale(0.9); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bc-walker, .bc-person, .bc-leg, .bc-case, .bc-pop { animation: none !important; }
+    .bc-person { transform: rotate(-6deg); }
+  }
+
   .auth-credit {
     text-align: center;
     margin-top: 16px;
@@ -1407,6 +1564,28 @@
       </div>
 
       <p class="welcome-tagline">Bienvenue sur Piquant IA</p>
+
+      <!-- Scène spéciale inscription : un personnage arrive avec une valise,
+           la pose, s'y adosse, et les champs du formulaire en sortent -->
+      <div class="briefcase-scene hidden" id="briefcaseScene" aria-hidden="true">
+        <div class="scene-ground"></div>
+        <div class="bc-walker" id="bcWalker">
+          <div class="bc-shadow"></div>
+          <div class="bc-person">
+            <div class="bc-head"></div>
+            <div class="bc-torso"></div>
+            <div class="bc-arm bc-arm-hold"></div>
+            <div class="bc-leg bc-leg-a"></div>
+            <div class="bc-leg bc-leg-b"></div>
+          </div>
+          <div class="bc-case" id="bcCase">
+            <span class="bc-case-handle"></span>
+          </div>
+        </div>
+        <span class="bc-pop" style="--dx:-16px;">✎</span>
+        <span class="bc-pop" style="--dx:0px;">@</span>
+        <span class="bc-pop" style="--dx:16px;">🔒</span>
+      </div>
 
       <h2 id="authTitle">Bon retour</h2>
       <p id="authSubtitle">Connecte-toi pour continuer avec Piquant</p>
@@ -2114,6 +2293,8 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       authTitle.textContent = 'Bon retour';
       authSubtitle.textContent = 'Connecte-toi pour continuer avec Piquant';
       authSwitchNote.innerHTML = 'Pas encore de compte ? <button type="button" id="switchToSignup">Créer un compte</button>';
+      document.getElementById('briefcaseScene').classList.add('hidden');
+      document.querySelector('.welcome-scene').classList.remove('hidden');
     } else {
       tabSignup.classList.add('active');
       tabLogin.classList.remove('active');
@@ -2123,12 +2304,30 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       authTitle.textContent = 'Créer un compte';
       authSubtitle.textContent = 'Rejoins Piquant en quelques secondes';
       authSwitchNote.innerHTML = 'Déjà un compte ? <button type="button" id="switchToLogin">Se connecter</button>';
+      document.querySelector('.welcome-scene').classList.add('hidden');
+      playBriefcaseScene();
     }
     // ré-attache les écouteurs (le HTML a été régénéré)
     const s2s = document.getElementById('switchToSignup');
     if (s2s) s2s.addEventListener('click', () => setMode('signup'));
     const s2l = document.getElementById('switchToLogin');
     if (s2l) s2l.addEventListener('click', () => setMode('login'));
+  }
+
+  // Rejoue la scène du personnage à la valise à chaque passage sur "Créer un compte"
+  function playBriefcaseScene() {
+    const scene = document.getElementById('briefcaseScene');
+    const walker = document.getElementById('bcWalker');
+    scene.classList.remove('hidden');
+    walker.classList.remove('arrived');
+    // force le redémarrage des animations CSS
+    void walker.offsetWidth;
+    scene.querySelectorAll('.bc-pop').forEach((el) => {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+    setTimeout(() => walker.classList.add('arrived'), 1300);
   }
 
   tabLogin.addEventListener('click', () => setMode('login'));
@@ -2366,8 +2565,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       })
       .then(() => {
         deferAuthReveal = false;
-        authScreen.classList.remove('visible');
-        appRoot.classList.remove('app-hidden');
+        revealNextScreen();
       })
       .catch((err) => {
         deferAuthReveal = false;
@@ -2379,13 +2577,20 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   // --- Déconnexion ---
   logoutBtn.addEventListener('click', function () {
     guestMode = false;
+    deferAuthReveal = false;
     if (window.PiquantCommunity) window.PiquantCommunity.onLogout();
     auth.signOut();
-    appRoot.classList.add('app-hidden');
-    authScreen.classList.add('visible');
+    isLoggedIn = false;
+    authResolved = true;
+    revealNextScreen();
   });
 
   // --- Orchestration des écrans : splash -> auth ou app ---
+  // Une seule fonction décide de ce qui doit être affiché, à partir de
+  // trois informations (authResolved, isLoggedIn, deferAuthReveal).
+  // Tout le reste du code se contente de mettre ces variables à jour puis
+  // d'appeler revealNextScreen() — ça évite que deux bouts de code se
+  // marchent dessus et laissent l'écran de connexion collé par-dessus l'appli.
   let splashMinTimeElapsed = false;
   setTimeout(() => { splashMinTimeElapsed = true; revealNextScreen(); }, 1300);
 
@@ -2395,6 +2600,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   function revealNextScreen() {
     if (!splashMinTimeElapsed || !authResolved) return;
     splash.classList.add('fade-out');
+
+    // Pendant l'animation de succès de l'inscription, on ne touche à rien :
+    // le formulaire reste affiché tel quel jusqu'à la fin du délai prévu.
+    if (deferAuthReveal) return;
+
     if (isLoggedIn) {
       authScreen.classList.remove('visible');
       appRoot.classList.remove('app-hidden');
@@ -2408,6 +2618,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     if (guestMode && !user) return; // ne pas repasser à l'écran de connexion en mode invité
     authResolved = true;
     isLoggedIn = !!user;
+
     if (user) {
       const name = user.displayName || 'Utilisateur';
       sidebarUserName.textContent = name;
@@ -2420,28 +2631,19 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
         sidebarAvatar.style.backgroundImage = '';
         sidebarAvatar.textContent = name.trim().charAt(0).toUpperCase();
       }
-      if (!deferAuthReveal) {
-        authScreen.classList.remove('visible');
-        appRoot.classList.remove('app-hidden');
-      }
       if (window.PiquantCommunity) window.PiquantCommunity.onLogin(user);
     } else {
-      appRoot.classList.add('app-hidden');
-      authScreen.classList.add('visible');
       if (window.PiquantCommunity) window.PiquantCommunity.onLogout();
     }
-    // Si le splash minimum est déjà passé, on bascule immédiatement
-    if (splashMinTimeElapsed) {
-      splash.classList.add('fade-out');
-    }
+
     revealNextScreen();
   }, function (err) {
     // Firebase n'a pas pu vérifier l'état de connexion (clés invalides, réseau, etc.)
     authResolved = true;
     isLoggedIn = false;
+    deferAuthReveal = false;
     showError("Impossible de contacter Firebase. Vérifiez votre configuration.");
-    splash.classList.add('fade-out');
-    authScreen.classList.add('visible');
+    revealNextScreen();
   });
 
   // Filet de sécurité : après 4s, si Firebase n'a toujours pas répondu
@@ -2451,9 +2653,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     if (!authResolved) {
       authResolved = true;
       isLoggedIn = false;
-      splash.classList.add('fade-out');
-      authScreen.classList.add('visible');
-      appRoot.classList.add('app-hidden');
+      revealNextScreen();
     }
   }, 4000);
 })();
