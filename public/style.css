@@ -1115,12 +1115,32 @@ body {
 
   .hhw-body {
     position: absolute;
-    width: 26px;
-    height: 18px;
+    width: 27px;
+    height: 19px;
     left: 8px;
     top: 10px;
-    border-radius: 50% 60% 50% 50%;
-    background: linear-gradient(135deg, #e9c19a, #a9754b);
+    border-radius: 50% 62% 48% 50%;
+    background: linear-gradient(150deg, #f0d0a8 0%, #cf9a68 55%, #8f6039 100%);
+    box-shadow: inset -3px -3px 4px rgba(0,0,0,0.22), inset 2px 2px 3px rgba(255,255,255,0.15);
+  }
+  .hhw-body-shade {
+    position: absolute;
+    width: 12px;
+    height: 7px;
+    left: 16px;
+    top: 20px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(120,75,40,0.35), transparent 70%);
+  }
+  .hhw-tail {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    left: 32px;
+    top: 18px;
+    border-radius: 50%;
+    background: #a9754b;
+    box-shadow: inset -1px -1px 1px rgba(0,0,0,0.25);
   }
   .hhw-snout {
     position: absolute;
@@ -1128,8 +1148,17 @@ body {
     height: 7px;
     left: 0px;
     top: 15px;
-    background: #c99a6d;
+    background: linear-gradient(100deg, #e0b585, #b5835a);
     border-radius: 50% 15% 15% 50%;
+  }
+  .hhw-snout-shade {
+    position: absolute;
+    width: 5px;
+    height: 3px;
+    left: 1px;
+    top: 18px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.12);
   }
   .hhw-nose {
     position: absolute;
@@ -1137,8 +1166,18 @@ body {
     height: 3px;
     left: 0px;
     top: 16px;
-    background: #2a1c12;
+    background: #241812;
     border-radius: 50%;
+  }
+  .hhw-nose-shine {
+    position: absolute;
+    width: 0.8px;
+    height: 0.8px;
+    left: 0.4px;
+    top: 16px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0.7;
   }
   .hhw-eye {
     position: absolute;
@@ -1146,8 +1185,18 @@ body {
     height: 3px;
     left: 15px;
     top: 12px;
-    background: #2a1c12;
+    background: #241812;
     border-radius: 50%;
+  }
+  .hhw-eye-shine {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    left: 15.4px;
+    top: 12.2px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0.85;
   }
   .hhw-ear {
     position: absolute;
@@ -1155,29 +1204,59 @@ body {
     height: 5px;
     left: 18px;
     top: 6px;
-    background: #a9754b;
+    background: linear-gradient(135deg, #cf9a68, #8f6039);
     border-radius: 50% 50% 50% 0;
     transform: rotate(-20deg);
   }
+  .hhw-ear-inner {
+    position: absolute;
+    width: 2.2px;
+    height: 2.2px;
+    left: 19px;
+    top: 7.4px;
+    background: #7c5432;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-20deg);
+  }
+
+  /* Piquants en deux couches (arrière + avant) pour un effet fourni,
+     avec un dégradé par piquant plutôt qu'une couleur plate */
   .hhw-spike {
     position: absolute;
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 0 3px 9px 3px;
-    border-color: transparent transparent #c9531c transparent;
+    border-width: 0 2.6px 9px 2.6px;
+    border-color: transparent transparent #d66a2c transparent;
     transform-origin: bottom center;
     transform: rotate(var(--r));
+    filter: drop-shadow(0 0.5px 0 #7c3614);
   }
+  .hhw-spike-back {
+    border-width: 0 2.2px 7px 2.2px;
+    border-bottom-color: #a4441c;
+    opacity: 0.85;
+    filter: none;
+  }
+
   .hhw-leg {
     position: absolute;
     width: 4px;
     height: 6px;
     bottom: 0;
-    background: #8f6039;
-    border-radius: 2px;
+    background: linear-gradient(180deg, #a9754b, #6b4425);
+    border-radius: 2px 2px 3px 3px;
     transform-origin: top center;
     animation: hhw-step 0.42s ease-in-out infinite;
+  }
+  .hhw-paw {
+    position: absolute;
+    bottom: -1px;
+    left: -0.5px;
+    width: 5px;
+    height: 2px;
+    background: #6b4425;
+    border-radius: 0 0 3px 3px;
   }
   .hhw-leg-a { left: 13px; animation-delay: 0s; }
   .hhw-leg-b { left: 22px; animation-delay: 0.21s; }
@@ -1329,7 +1408,26 @@ body {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #e9c19a;
+    background: linear-gradient(150deg, #f0d0a8, #cf9a68);
+    box-shadow: inset -1.5px -1.5px 2px rgba(0,0,0,0.18);
+  }
+  .bc-hair {
+    position: absolute;
+    top: -1.5px;
+    left: 4.5px;
+    width: 11px;
+    height: 6px;
+    border-radius: 60% 60% 20% 20%;
+    background: linear-gradient(160deg, #3a2a1e, #241812);
+  }
+  .bc-face {
+    position: absolute;
+    top: 4px;
+    left: 12px;
+    width: 1.6px;
+    height: 1.6px;
+    border-radius: 50%;
+    background: #241812;
   }
   .bc-torso {
     position: absolute;
@@ -1338,7 +1436,17 @@ body {
     width: 14px;
     height: 16px;
     border-radius: 6px 6px 4px 4px;
-    background: linear-gradient(160deg, #c9531c, #7c3614);
+    background: linear-gradient(160deg, #d66a2c, #7c3614);
+    box-shadow: inset -2px 0 3px rgba(0,0,0,0.22);
+  }
+  .bc-torso-shade {
+    position: absolute;
+    top: 9px;
+    left: 3px;
+    width: 5px;
+    height: 16px;
+    border-radius: 6px 0 0 4px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.18), transparent);
   }
   .bc-arm-hold {
     position: absolute;
@@ -1347,8 +1455,27 @@ body {
     width: 3px;
     height: 12px;
     border-radius: 2px;
-    background: #c9531c;
+    background: linear-gradient(160deg, #d66a2c, #7c3614);
     transform-origin: top center;
+  }
+  .bc-arm-free {
+    position: absolute;
+    top: 13px;
+    left: 1px;
+    width: 3px;
+    height: 10px;
+    border-radius: 2px;
+    background: linear-gradient(160deg, #c9531c, #7c3614);
+    transform-origin: top center;
+    animation: bc-arm-swing 0.4s ease-in-out infinite;
+  }
+  @keyframes bc-arm-swing {
+    0%, 100% { transform: rotate(12deg); }
+    50%      { transform: rotate(-12deg); }
+  }
+  .bc-walker.arrived .bc-arm-free {
+    animation: none;
+    transform: rotate(-25deg);
   }
   .bc-leg {
     position: absolute;
@@ -1356,9 +1483,18 @@ body {
     width: 4px;
     height: 11px;
     border-radius: 2px;
-    background: #4a3627;
+    background: linear-gradient(180deg, #5a4433, #362617);
     transform-origin: top center;
     animation: bc-leg-step 0.4s ease-in-out infinite;
+  }
+  .bc-shoe {
+    position: absolute;
+    bottom: -1.5px;
+    left: -1px;
+    width: 6px;
+    height: 2.5px;
+    background: #1c130c;
+    border-radius: 1px 3px 3px 1px;
   }
   .bc-leg-a { left: 5px; animation-delay: 0s; }
   .bc-leg-b { left: 11px; animation-delay: 0.2s; }
@@ -1390,6 +1526,16 @@ body {
     border: 1.4px solid #4a3627;
     border-bottom: none;
     border-radius: 2px 2px 0 0;
+  }
+  .bc-case-latch {
+    position: absolute;
+    top: 3px;
+    left: 5.5px;
+    width: 2px;
+    height: 2px;
+    background: #e9c19a;
+    border-radius: 1px;
+    opacity: 0.8;
   }
   @keyframes bc-case-carry {
     0%, 100% { transform: translateY(0) rotate(0deg); }
