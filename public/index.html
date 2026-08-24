@@ -612,6 +612,46 @@
     to { opacity: 0; }
   }
 
+  .hhw-shadow {
+    position: absolute;
+    left: 6px;
+    bottom: -2px;
+    width: 28px;
+    height: 4px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.45), transparent 75%);
+    animation: hhw-shadow-pulse 0.42s ease-in-out infinite;
+  }
+  @keyframes hhw-shadow-pulse {
+    0%, 100% { transform: scaleX(1); opacity: 0.6; }
+    50%      { transform: scaleX(0.82); opacity: 0.4; }
+  }
+
+  .hhw-dust {
+    position: absolute;
+    bottom: 1px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(233,193,154,0.5);
+    opacity: 0;
+    animation: hhw-dust-puff 0.5s ease-out infinite;
+  }
+  @keyframes hhw-dust-puff {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+    15%  { opacity: 0.7; }
+    100% { opacity: 0; transform: translate(-9px, -5px) scale(1.1); }
+  }
+
+  /* Le corps se soulève légèrement à chaque pas, comme une vraie démarche */
+  .hhw-bob {
+    animation: hhw-body-bob 0.42s ease-in-out infinite;
+  }
+  @keyframes hhw-body-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-1.5px); }
+  }
+
   .hhw-body {
     position: absolute;
     width: 26px;
@@ -712,6 +752,60 @@
   @keyframes welcome-text-in {
     from { opacity: 0; transform: translateY(4px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .success-overlay {
+    position: absolute;
+    inset: 0;
+    background: #17100b;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 5;
+  }
+  .success-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  .success-check {
+    width: 74px;
+    height: 74px;
+  }
+  .success-check-circle {
+    stroke: #7fae5c;
+    stroke-width: 2.5;
+    stroke-dasharray: 145;
+    stroke-dashoffset: 145;
+    transition: stroke-dashoffset 0.5s ease-out;
+  }
+  .success-check-mark {
+    stroke: #7fae5c;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 36;
+    stroke-dashoffset: 36;
+    transition: stroke-dashoffset 0.35s ease-out 0.45s;
+  }
+  .success-overlay.show .success-check-circle { stroke-dashoffset: 0; }
+  .success-overlay.show .success-check-mark { stroke-dashoffset: 0; }
+  .success-text {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    color: #e9c19a;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.35s ease 0.75s, transform 0.35s ease 0.75s;
+  }
+  .success-overlay.show .success-text {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .auth-credit {
@@ -1249,16 +1343,23 @@
 
         <!-- Le hérisson arrive de profil, en marchant -->
         <div class="hh-walker" id="hhWalker" aria-hidden="true">
+          <div class="hhw-shadow"></div>
+          <span class="hhw-dust" style="left:2px; animation-delay:0.05s;"></span>
+          <span class="hhw-dust" style="left:2px; animation-delay:0.26s;"></span>
+          <span class="hhw-dust" style="left:2px; animation-delay:0.47s;"></span>
+          <span class="hhw-dust" style="left:2px; animation-delay:0.68s;"></span>
           <span class="hhw-spike" style="top:1px; left:10px; --r:-30deg;"></span>
           <span class="hhw-spike" style="top:-2px; left:16px; --r:-14deg;"></span>
           <span class="hhw-spike" style="top:-3px; left:22px; --r:2deg;"></span>
           <span class="hhw-spike" style="top:-1px; left:28px; --r:18deg;"></span>
           <span class="hhw-spike" style="top:3px; left:33px; --r:34deg;"></span>
-          <div class="hhw-body"></div>
-          <div class="hhw-snout"></div>
-          <div class="hhw-nose"></div>
-          <div class="hhw-eye"></div>
-          <div class="hhw-ear"></div>
+          <div class="hhw-bob">
+            <div class="hhw-body"></div>
+            <div class="hhw-snout"></div>
+            <div class="hhw-nose"></div>
+            <div class="hhw-eye"></div>
+            <div class="hhw-ear"></div>
+          </div>
           <div class="hhw-leg hhw-leg-a"></div>
           <div class="hhw-leg hhw-leg-b"></div>
         </div>
@@ -1438,6 +1539,14 @@
     </button>
 
     <div class="auth-credit">Batchabi Rahim</div>
+
+    <div class="success-overlay" id="successOverlay" aria-hidden="true">
+      <svg class="success-check" viewBox="0 0 52 52">
+        <circle class="success-check-circle" cx="26" cy="26" r="23" fill="none"/>
+        <path class="success-check-mark" fill="none" d="M14 27l7 7 17-17"/>
+      </svg>
+      <p class="success-text">Compte créé !</p>
+    </div>
   </div>
 </div>
 
@@ -2054,6 +2163,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
   // --- Utiliser sans compte (mode invité) ---
   let guestMode = false;
+  let deferAuthReveal = false;
   guestBtn.addEventListener('click', function () {
     guestMode = true;
     sidebarUserName.textContent = 'Invité';
@@ -2214,6 +2324,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     const signupId = nameToLoginId(firstName, lastName);
     const btn = document.getElementById('signupSubmit');
     btn.disabled = true;
+    deferAuthReveal = true;
 
     let createdUser = null;
 
@@ -2248,7 +2359,20 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       })
-      .catch((err) => showError(friendlyError(err.code)))
+      .then(() => {
+        const overlay = document.getElementById('successOverlay');
+        overlay.classList.add('show');
+        return new Promise((resolve) => setTimeout(resolve, 1100));
+      })
+      .then(() => {
+        deferAuthReveal = false;
+        authScreen.classList.remove('visible');
+        appRoot.classList.remove('app-hidden');
+      })
+      .catch((err) => {
+        deferAuthReveal = false;
+        showError(friendlyError(err.code));
+      })
       .finally(() => { btn.disabled = false; });
   });
 
@@ -2296,8 +2420,10 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
         sidebarAvatar.style.backgroundImage = '';
         sidebarAvatar.textContent = name.trim().charAt(0).toUpperCase();
       }
-      authScreen.classList.remove('visible');
-      appRoot.classList.remove('app-hidden');
+      if (!deferAuthReveal) {
+        authScreen.classList.remove('visible');
+        appRoot.classList.remove('app-hidden');
+      }
       if (window.PiquantCommunity) window.PiquantCommunity.onLogin(user);
     } else {
       appRoot.classList.add('app-hidden');
