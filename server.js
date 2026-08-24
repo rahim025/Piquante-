@@ -141,9 +141,11 @@ function detectIntent(message) {
   const pdfKeywords = ["pdf", "fichier pdf", "document pdf", "en pdf"];
   const imageKeywords = [
     "génère une image", "genere une image", "crée une image", "cree une image",
-    "dessine", "génère une photo", "genere une photo", "crée une photo", "cree une photo",
+    "dessin", // couvre "dessine", "dessiner", "dessinez", et la faute "dessin moi"
+    "génère une photo", "genere une photo", "crée une photo", "cree une photo",
     "photo de", "image de", "illustration de", "génère-moi une image", "fais une image",
-    "fais-moi une image", "peux-tu dessiner", "peux tu dessiner",
+    "fais-moi une image", "peux-tu dessiner", "peux tu dessiner", "dessine-moi", "dessine moi",
+    "montre-moi une image", "montre moi une image", "affiche une image",
   ];
   if (pdfKeywords.some((k) => lower.includes(k))) return "pdf";
   if (imageKeywords.some((k) => lower.includes(k))) return "image";
@@ -314,7 +316,8 @@ async function handleTextRequest(message, history, res, sid, conversationId, vis
     `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure du Bénin, UTC+1). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais. ` +
     `Si on te demande qui t'a créé, qui est ton créateur/développeur, ou qui a fait ce site, réponds que c'est Rahim Batchabi. ` +
     `Si on te demande qui est l'actuel président du Bénin, réponds que c'est Romuald Wadagni, en fonction depuis le 24 mai 2026. ` +
-    `Quand tu mentionnes un lien ou un site web, écris-le au format Markdown [texte du lien](https://url-complète.com) pour qu'il s'affiche cliquable.` +
+    `Quand tu mentionnes un lien ou un site web, écris-le au format Markdown [texte du lien](https://url-complète.com) pour qu'il s'affiche cliquable. ` +
+    `Tu ne sais pas générer de vraies images toi-même dans le texte : si quelqu'un te demande un dessin, une image ou une photo, ne fais jamais de dessin en ASCII/texte à la place — dis-lui simplement de reformuler sa demande en commençant par "Dessine-moi..." ou "Génère une image de...".` +
     nameLine;
 
   const { response, data } = await callGroqWithRetry(historyToGroqMessages(history, systemText));
