@@ -10,10 +10,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Groq est utilisé pour tout le texte (chat + contenu des PDF) : gratuit et sans
-// limite bloquante. Les images passent désormais par Pollinations.ai, gratuit
-// et sans clé API du tout (voir handleImageRequest).
+// limite bloquante.
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const GROQ_MODEL = "openai/gpt-oss-20b";
+
+// Images : on essaie d'abord Nano Banana (Gemini), meilleure qualité, puis on
+// bascule automatiquement sur Pollinations.ai (gratuit, sans clé) si Gemini
+// est indisponible ou si sa limite gratuite est atteinte.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const IMAGE_MODEL = "gemini-3.1-flash-image";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 // ---------- Base de données (historique des conversations) ----------
@@ -336,42 +341,70 @@ async function handleTextRequest(message, history, res, sid, conversationId, vis
   res.json({ type: "text", reply, conversationId });
 }
 
-async function handleImageRequest(message, history, res, conversationId) {
+async function tryGeminiImage(message) {
+  if (!GEMINI_API_KEY) return null;
   try {
-    // Pollinations.ai : génération d'images gratuite, sans clé API, sans compte.
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: message }] }] }),
+    });
+    if (!response.ok) {
+      console.warn("Nano Banana indisponible (statut " + response.status + "), bascule sur Pollinations.");
+      return null;
+    }
+    const data = await response.json();
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart) return null;
+    return `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+  } catch (err) {
+    console.warn("Erreur Nano Banana, bascule sur Pollinations :", err.message);
+    return null;
+  }
+}
+
+async function tryPollinationsImage(message) {
+  try {
     const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(message)}?width=1024&height=1024&nologo=true&model=flux`;
     const response = await fetch(url);
-
-    if (!response.ok) {
-      console.error("Pollinations image error:", response.status, response.statusText);
-      return res.status(502).json({
-        error: "Le service d'images est temporairement indisponible. Réessaie dans un instant.",
-      });
-    }
-
+    if (!response.ok) return null;
     const arrayBuffer = await response.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
     const contentType = response.headers.get("content-type") || "image/jpeg";
-    const dataUrl = `data:${contentType};base64,${base64}`;
-
-    history.push({ role: "user", parts: [{ text: message }] });
-    history.push({ role: "model", parts: [{ text: "[Image générée]" }] });
-    while (history.length > MAX_TURNS * 2) history.shift();
-
-    await saveMessage(conversationId, "model", "[Image générée]");
-
-    res.json({
-      type: "image",
-      reply: "Voici l'image générée :",
-      image: dataUrl,
-      conversationId,
-    });
+    return `data:${contentType};base64,${base64}`;
   } catch (err) {
-    console.error("Image generation error:", err);
-    res.status(502).json({
-      error: "Impossible de générer l'image pour cette demande (essaie de reformuler).",
+    console.error("Erreur Pollinations :", err.message);
+    return null;
+  }
+}
+
+async function handleImageRequest(message, history, res, conversationId) {
+  // Priorité à Nano Banana (meilleure qualité), puis repli automatique sur
+  // Pollinations si la clé manque, si la limite gratuite est atteinte, ou en
+  // cas d'erreur quelconque — le visiteur ne voit jamais l'échec intermédiaire.
+  let dataUrl = await tryGeminiImage(message);
+  if (!dataUrl) dataUrl = await tryPollinationsImage(message);
+
+  if (!dataUrl) {
+    return res.status(502).json({
+      error: "Impossible de générer l'image pour le moment. Réessaie dans un instant.",
     });
   }
+
+  history.push({ role: "user", parts: [{ text: message }] });
+  history.push({ role: "model", parts: [{ text: "[Image générée]" }] });
+  while (history.length > MAX_TURNS * 2) history.shift();
+
+  await saveMessage(conversationId, "model", "[Image générée]");
+
+  res.json({
+    type: "image",
+    reply: "Voici l'image générée :",
+    image: dataUrl,
+    conversationId,
+  });
 }
 
 async function handlePdfRequest(message, history, res, conversationId) {
