@@ -1907,6 +1907,30 @@ body {
   .auth-submit:active { transform: translateY(0); }
   .auth-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
+  .auth-link-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    background: none;
+    border: none;
+    color: rgba(233,193,154,0.65);
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .auth-link-btn:hover { color: #f4a259; }
+
+  .auth-hint {
+    font-size: 0.78rem;
+    color: rgba(233,193,154,0.5);
+    text-align: center;
+    margin: 10px 0 0;
+    line-height: 1.4;
+  }
+
   .auth-error {
     background: rgba(220, 80, 60, 0.1);
     border: 1px solid rgba(220, 80, 60, 0.3);

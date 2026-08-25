@@ -3,7 +3,26 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Piquant — l'assistant qui va droit au but</title>
+<title>Piquant IA — l'assistant qui va droit au but</title>
+<meta name="description" content="Piquant est un assistant IA gratuit en français qui répond directement à tes questions, rédige tes messages, génère des images et des documents PDF — sans détour, sans blabla." />
+<meta name="keywords" content="IA, assistant IA, chatbot français, Piquant, Bénin, intelligence artificielle, génération d'images" />
+<meta name="author" content="Batchabi Rahim" />
+<link rel="canonical" href="https://piquant-ia.onrender.com/" />
+
+<!-- Open Graph (aperçu sur Facebook, WhatsApp, LinkedIn...) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Piquant IA — l'assistant qui va droit au but" />
+<meta property="og:description" content="Un assistant IA gratuit en français : réponses directes, rédaction, images et PDF générés en un message." />
+<meta property="og:image" content="https://piquant-ia.onrender.com/og-image.png" />
+<meta property="og:url" content="https://piquant-ia.onrender.com/" />
+<meta property="og:locale" content="fr_FR" />
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Piquant IA — l'assistant qui va droit au but" />
+<meta name="twitter:description" content="Un assistant IA gratuit en français : réponses directes, rédaction, images et PDF générés en un message." />
+<meta name="twitter:image" content="https://piquant-ia.onrender.com/og-image.png" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="logo.svg" />
@@ -207,111 +226,61 @@
 
     <!-- Formulaire de connexion -->
     <form class="auth-form" id="loginForm">
-      <div class="form-row">
-        <div class="form-field">
-          <input type="text" id="loginFirstName" placeholder=" " required autocomplete="given-name">
-          <label>Prénom</label>
-        </div>
-        <div class="form-field">
-          <input type="text" id="loginLastName" placeholder=" " required autocomplete="family-name">
-          <label>Nom</label>
-        </div>
+      <div class="form-field">
+        <input type="email" id="loginEmail" placeholder=" " required autocomplete="email">
+        <label>Adresse e-mail</label>
       </div>
       <div class="form-field">
         <input type="password" id="loginPassword" placeholder=" " required autocomplete="current-password">
         <label>Mot de passe</label>
       </div>
       <button type="submit" class="auth-submit" id="loginSubmit">Se connecter</button>
+      <button type="button" class="auth-link-btn" id="forgotPasswordBtn">Mot de passe oublié ?</button>
     </form>
 
-    <!-- Formulaire d'inscription détaillé, en 2 étapes -->
+    <!-- Formulaire d'inscription : allégé au strict nécessaire pour démarrer -->
     <form class="auth-form hidden" id="signupForm">
-      <div class="signup-steps">
-        <span class="step-dot active" data-step-dot="1"></span>
-        <span class="step-dot" data-step-dot="2"></span>
-      </div>
-
-      <!-- Étape 1 : identité -->
-      <div class="signup-step" id="signupStep1">
-        <div class="avatar-picker">
-          <input type="file" id="signupAvatarInput" accept="image/*" hidden>
-          <button type="button" id="avatarPickerBtn" class="avatar-picker-btn">
-            <img id="avatarPreview" src="" alt="" hidden>
-            <span id="avatarPickerPlaceholder">+</span>
-          </button>
-          <span class="avatar-picker-label">Photo de profil (facultatif)</span>
-        </div>
-
-        <div class="form-row">
-          <div class="form-field">
-            <input type="text" id="signupFirstName" placeholder=" " required autocomplete="given-name">
-            <label>Prénom</label>
-          </div>
-          <div class="form-field">
-            <input type="text" id="signupLastName" placeholder=" " required autocomplete="family-name">
-            <label>Nom</label>
-          </div>
+      <div class="form-row">
+        <div class="form-field">
+          <input type="text" id="signupFirstName" placeholder=" " required autocomplete="given-name">
+          <label>Prénom</label>
         </div>
         <div class="form-field">
-          <input type="date" id="signupBirthdate" placeholder=" " autocomplete="bday">
-          <label>Date de naissance</label>
-        </div>
-        <div class="form-row">
-          <div class="form-field">
-            <input type="tel" id="signupPhone" placeholder=" " autocomplete="tel">
-            <label>Numéro de téléphone</label>
-          </div>
-          <div class="form-field">
-            <select id="signupGender">
-              <option value="" selected disabled hidden> </option>
-              <option value="femme">Femme</option>
-              <option value="homme">Homme</option>
-              <option value="autre">Autre</option>
-              <option value="ne_precise_pas">Préfère ne pas dire</option>
-            </select>
-            <label>Genre</label>
-          </div>
-        </div>
-        <div class="step-nav">
-          <button type="button" class="auth-submit" id="signupNextBtn">Continuer</button>
+          <input type="text" id="signupLastName" placeholder=" " required autocomplete="family-name">
+          <label>Nom</label>
         </div>
       </div>
-
-      <!-- Étape 2 : sécurité -->
-      <div class="signup-step hidden" id="signupStep2">
-        <div class="form-field">
-          <select id="signupSecurityQuestion">
-            <option value="" selected disabled hidden> </option>
-            <option value="ville_naissance">Quelle est ta ville de naissance ?</option>
-            <option value="animal_enfance">Quel était le nom de ton premier animal ?</option>
-            <option value="plat_prefere">Quel est ton plat préféré ?</option>
-            <option value="meilleur_ami">Quel est le prénom de ton meilleur ami d'enfance ?</option>
-          </select>
-          <label>Question secrète (récupération du mot de passe)</label>
-        </div>
-        <div class="form-field">
-          <input type="text" id="signupSecurityAnswer" placeholder=" " autocomplete="off">
-          <label>Réponse</label>
-        </div>
-        <div class="form-field">
-          <input type="password" id="signupPassword" placeholder=" " required autocomplete="new-password" minlength="6">
-          <label>Mot de passe</label>
-          <div class="pw-strength"><div class="pw-strength-bar" id="pwStrengthBar"></div></div>
-          <div class="pw-strength-label" id="pwStrengthLabel">6 caractères minimum</div>
-        </div>
-        <div class="form-field">
-          <input type="password" id="signupPasswordConfirm" placeholder=" " required autocomplete="new-password" minlength="6">
-          <label>Confirmer le mot de passe</label>
-        </div>
-        <label class="auth-checkbox">
-          <input type="checkbox" id="signupTerms" required>
-          <span>J'accepte les <a href="#" onclick="return false;">conditions d'utilisation</a> et la politique de confidentialité de Piquant.</span>
-        </label>
-        <div class="step-nav">
-          <button type="button" class="auth-submit secondary" id="signupBackBtn">Retour</button>
-          <button type="submit" class="auth-submit" id="signupSubmit">Créer mon compte</button>
-        </div>
+      <div class="form-field">
+        <input type="email" id="signupEmail" placeholder=" " required autocomplete="email">
+        <label>Adresse e-mail</label>
       </div>
+      <div class="form-field">
+        <input type="password" id="signupPassword" placeholder=" " required autocomplete="new-password" minlength="6">
+        <label>Mot de passe</label>
+        <div class="pw-strength"><div class="pw-strength-bar" id="pwStrengthBar"></div></div>
+        <div class="pw-strength-label" id="pwStrengthLabel">6 caractères minimum</div>
+      </div>
+      <div class="form-field">
+        <input type="password" id="signupPasswordConfirm" placeholder=" " required autocomplete="new-password" minlength="6">
+        <label>Confirmer le mot de passe</label>
+      </div>
+      <label class="auth-checkbox">
+        <input type="checkbox" id="signupTerms" required>
+        <span>J'accepte les <a href="privacy.html" target="_blank">conditions d'utilisation et la politique de confidentialité</a> de Piquant.</span>
+      </label>
+      <button type="submit" class="auth-submit" id="signupSubmit">Créer mon compte</button>
+      <p class="auth-hint">Tu pourras compléter ton profil (photo, téléphone...) plus tard, une fois connecté.</p>
+    </form>
+
+    <!-- Formulaire de récupération de mot de passe -->
+    <form class="auth-form hidden" id="resetForm">
+      <p class="auth-hint" style="margin-top:0;">Entre ton e-mail, on t'envoie un lien pour choisir un nouveau mot de passe.</p>
+      <div class="form-field">
+        <input type="email" id="resetEmail" placeholder=" " required autocomplete="email">
+        <label>Adresse e-mail</label>
+      </div>
+      <button type="submit" class="auth-submit" id="resetSubmit">Envoyer le lien</button>
+      <button type="button" class="auth-link-btn" id="backToLoginFromReset">Retour à la connexion</button>
     </form>
 
     <p class="auth-switch-note" id="authSwitchNote">
@@ -888,10 +857,14 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   function clearError() {
     authError.classList.remove('show');
     authError.textContent = '';
+    authError.style.color = '';
+    authError.style.background = '';
+    authError.style.borderColor = '';
   }
 
   function setMode(mode) {
     clearError();
+    document.getElementById('resetForm').classList.add('hidden');
     if (mode === 'login') {
       tabLogin.classList.add('active');
       tabSignup.classList.remove('active');
@@ -944,28 +917,17 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
   function friendlyError(code) {
     const map = {
-      'auth/invalid-email': "Prénom ou nom invalide.",
-      'auth/user-not-found': "Aucun compte ne correspond à ce prénom et nom.",
+      'auth/invalid-email': "Adresse e-mail invalide.",
+      'auth/user-not-found': "Aucun compte ne correspond à cet e-mail.",
       'auth/wrong-password': "Mot de passe incorrect.",
-      'auth/email-already-in-use': "Ce prénom et nom sont déjà utilisés. Essaie d'ajouter une initiale (ex : Jean K.).",
+      'auth/email-already-in-use': "Un compte existe déjà avec cet e-mail.",
       'auth/weak-password': "Le mot de passe doit contenir au moins 6 caractères.",
-      'auth/invalid-credential': "Prénom, nom ou mot de passe incorrect.",
-      'auth/network-request-failed': "Problème de connexion réseau."
+      'auth/invalid-credential': "E-mail ou mot de passe incorrect.",
+      'auth/network-request-failed': "Problème de connexion réseau.",
+      'auth/too-many-requests': "Trop de tentatives. Réessaie dans quelques minutes.",
+      'auth/missing-email': "Merci de renseigner ton adresse e-mail."
     };
     return map[code] || "Une erreur est survenue. Réessaie.";
-  }
-
-  // Construit un identifiant technique (au format email, exigé par Firebase)
-  // à partir du prénom et du nom — invisible pour l'utilisateur, qui ne voit
-  // jamais qu'il s'agit d'une adresse e-mail.
-  function nameToLoginId(firstName, lastName) {
-    const normalize = (s) =>
-      s
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // enlève les accents
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '');
-    return `${normalize(firstName)}.${normalize(lastName)}@piquant-users.app`;
   }
 
   // --- Utiliser sans compte (mode invité) ---
@@ -979,49 +941,6 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     appRoot.classList.remove('app-hidden');
     splash.classList.add('fade-out');
   });
-
-  // --- Wizard d'inscription en 2 étapes ---
-  const step1 = document.getElementById('signupStep1');
-  const step2 = document.getElementById('signupStep2');
-  const stepDots = document.querySelectorAll('.step-dot');
-  const nextBtn = document.getElementById('signupNextBtn');
-  const backBtn = document.getElementById('signupBackBtn');
-
-  function goToStep(n) {
-    clearError();
-    if (n === 1) {
-      step2.classList.add('hidden');
-      step1.classList.remove('hidden');
-      step1.classList.remove('step-back-anim');
-      void step1.offsetWidth; // relance l'animation
-      step1.classList.add('step-back-anim');
-    } else {
-      step1.classList.add('hidden');
-      step2.classList.remove('hidden');
-      step2.classList.remove('step-back-anim');
-      void step2.offsetWidth;
-    }
-    stepDots.forEach((dot) => {
-      const dotStep = Number(dot.getAttribute('data-step-dot'));
-      dot.classList.toggle('active', dotStep === n);
-      dot.classList.toggle('done', dotStep < n);
-    });
-  }
-
-  nextBtn.addEventListener('click', function () {
-    const firstName = document.getElementById('signupFirstName').value.trim();
-    const lastName = document.getElementById('signupLastName').value.trim();
-    if (!firstName || !lastName) {
-      showError("Renseigne au moins ton prénom et ton nom pour continuer.");
-      return;
-    }
-    goToStep(2);
-  });
-
-  backBtn.addEventListener('click', function () { goToStep(1); });
-
-  // Revenir à l'étape 1 à chaque fois qu'on réouvre le formulaire d'inscription
-  tabSignup.addEventListener('click', function () { goToStep(1); });
 
   // --- Jauge de robustesse du mot de passe ---
   const pwInput = document.getElementById('signupPassword');
@@ -1064,53 +983,26 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     });
   }
 
-  // --- Aperçu de la photo de profil choisie ---
-  const avatarInput = document.getElementById('signupAvatarInput');
-  const avatarPickerBtn = document.getElementById('avatarPickerBtn');
-  const avatarPreview = document.getElementById('avatarPreview');
-  const avatarPlaceholder = document.getElementById('avatarPickerPlaceholder');
-  let selectedAvatarFile = null;
-
-  avatarPickerBtn.addEventListener('click', () => avatarInput.click());
-  avatarInput.addEventListener('change', function () {
-    const file = this.files && this.files[0];
-    if (!file) return;
-    selectedAvatarFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      avatarPreview.src = e.target.result;
-      avatarPreview.hidden = false;
-      avatarPlaceholder.hidden = true;
-    };
-    reader.readAsDataURL(file);
-  });
-
-  // --- Connexion par prénom + nom ---
+  // --- Connexion par e-mail + mot de passe ---
   loginForm.addEventListener('submit', function (e) {
     e.preventDefault();
     clearError();
-    const firstName = document.getElementById('loginFirstName').value.trim();
-    const lastName = document.getElementById('loginLastName').value.trim();
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-    const loginId = nameToLoginId(firstName, lastName);
     const btn = document.getElementById('loginSubmit');
     btn.disabled = true;
-    auth.signInWithEmailAndPassword(loginId, password)
+    auth.signInWithEmailAndPassword(email, password)
       .catch((err) => showError(friendlyError(err.code)))
       .finally(() => { btn.disabled = false; });
   });
 
-  // --- Inscription détaillée ---
+  // --- Inscription allégée : prénom, nom, e-mail, mot de passe ---
   signupForm.addEventListener('submit', function (e) {
     e.preventDefault();
     clearError();
     const firstName = document.getElementById('signupFirstName').value.trim();
     const lastName = document.getElementById('signupLastName').value.trim();
-    const birthdate = document.getElementById('signupBirthdate').value;
-    const phone = document.getElementById('signupPhone').value.trim();
-    const gender = document.getElementById('signupGender').value;
-    const securityQuestion = document.getElementById('signupSecurityQuestion').value;
-    const securityAnswer = document.getElementById('signupSecurityAnswer').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
     const termsOk = document.getElementById('signupTerms').checked;
@@ -1123,46 +1015,25 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       showError("Merci d'accepter les conditions d'utilisation.");
       return;
     }
-    if (!securityQuestion || !securityAnswer) {
-      showError("Choisis une question secrète et réponds-y (utile pour récupérer ton compte).");
-      return;
-    }
 
-    const signupId = nameToLoginId(firstName, lastName);
     const btn = document.getElementById('signupSubmit');
     btn.disabled = true;
     deferAuthReveal = true;
 
     let createdUser = null;
 
-    auth.createUserWithEmailAndPassword(signupId, password)
+    auth.createUserWithEmailAndPassword(email, password)
       .then((cred) => {
         createdUser = cred.user;
         return createdUser.updateProfile({ displayName: `${firstName} ${lastName}`.trim() });
       })
       .then(() => {
-        // Photo de profil facultative : envoyée sur Firebase Storage
-        if (selectedAvatarFile) {
-          const storageRef = firebase.storage().ref(`avatars/${createdUser.uid}`);
-          return storageRef.put(selectedAvatarFile)
-            .then((snap) => snap.ref.getDownloadURL())
-            .then((url) => createdUser.updateProfile({ photoURL: url }))
-            .catch((err) => {
-              console.error("Échec de l'envoi de la photo :", err);
-              // On continue même si la photo échoue, ce n'est pas bloquant.
-            });
-        }
-      })
-      .then(() => {
-        // Infos complémentaires stockées dans Firestore (pas dans Auth)
+        // Profil minimal enregistré ; le reste (photo, téléphone, genre...)
+        // pourra être complété plus tard depuis les paramètres du compte.
         return firebase.firestore().collection('users').doc(createdUser.uid).set({
           firstName,
           lastName,
-          birthdate: birthdate || null,
-          phone: phone || null,
-          gender: gender || null,
-          securityQuestion,
-          securityAnswer: securityAnswer.toLowerCase(),
+          email,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       })
@@ -1179,6 +1050,46 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
         deferAuthReveal = false;
         showError(friendlyError(err.code));
       })
+      .finally(() => { btn.disabled = false; });
+  });
+
+  // --- Mot de passe oublié : lien envoyé par e-mail (Firebase) ---
+  const resetForm = document.getElementById('resetForm');
+  const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+  const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+
+  forgotPasswordBtn.addEventListener('click', function () {
+    clearError();
+    loginForm.classList.add('hidden');
+    resetForm.classList.remove('hidden');
+    authTitle.textContent = 'Mot de passe oublié';
+    authSubtitle.textContent = 'On va t\'aider à en choisir un nouveau';
+    document.getElementById('resetEmail').value = document.getElementById('loginEmail').value;
+  });
+
+  backToLoginFromReset.addEventListener('click', function () {
+    clearError();
+    resetForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+    authTitle.textContent = 'Bon retour';
+    authSubtitle.textContent = 'Connecte-toi pour continuer avec Piquant';
+  });
+
+  resetForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError();
+    const email = document.getElementById('resetEmail').value.trim();
+    const btn = document.getElementById('resetSubmit');
+    btn.disabled = true;
+    auth.sendPasswordResetEmail(email)
+      .then(() => {
+        authError.style.color = '#7fae5c';
+        authError.style.background = 'rgba(127,174,92,0.12)';
+        authError.style.borderColor = 'rgba(127,174,92,0.35)';
+        authError.textContent = "E-mail envoyé ! Vérifie ta boîte de réception (et tes spams).";
+        authError.classList.add('show');
+      })
+      .catch((err) => showError(friendlyError(err.code)))
       .finally(() => { btn.disabled = false; });
   });
 
