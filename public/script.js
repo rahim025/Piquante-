@@ -5,78 +5,15 @@
   const input = document.getElementById("composerInput");
   const sendBtn = document.getElementById("sendBtn");
   const resetBtn = document.getElementById("resetBtn");
-  const attachBtn = document.getElementById("attachBtn");
-  const fileInput = document.getElementById("fileInput");
-  const filePreviewRow = document.getElementById("filePreviewRow");
 
-  let pendingFile = null; // { name, mimeType, data (base64 sans préfixe), previewUrl }
-
-  attachBtn.addEventListener("click", () => fileInput.click());
-
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files && fileInput.files[0];
-    fileInput.value = ""; // permet de resélectionner le même fichier plus tard
-    if (!file) return;
-
-    const MAX_SIZE = 8 * 1024 * 1024; // 8 Mo
-    if (file.size > MAX_SIZE) {
-      alert("Ce fichier est trop volumineux (8 Mo maximum).");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      const base64 = dataUrl.split(",")[1];
-      pendingFile = {
-        name: file.name,
-        mimeType: file.type || "application/octet-stream",
-        data: base64,
-        previewUrl: file.type.startsWith("image/") ? dataUrl : null,
-      };
-      renderFilePreview();
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function renderFilePreview() {
-    if (!pendingFile) {
-      filePreviewRow.style.display = "none";
-      filePreviewRow.innerHTML = "";
-      return;
-    }
-    filePreviewRow.style.display = "flex";
-    filePreviewRow.innerHTML = "";
-    const chip = document.createElement("div");
-    chip.className = "file-preview-chip";
-    if (pendingFile.previewUrl) {
-      const img = document.createElement("img");
-      img.src = pendingFile.previewUrl;
-      chip.appendChild(img);
-    }
-    const name = document.createElement("span");
-    name.className = "fpc-name";
-    name.textContent = pendingFile.name;
-    chip.appendChild(name);
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "fpc-remove";
-    removeBtn.textContent = "✕";
-    removeBtn.addEventListener("click", () => {
-      pendingFile = null;
-      renderFilePreview();
-    });
-    chip.appendChild(removeBtn);
-    filePreviewRow.appendChild(chip);
-  }
-
-  const sessionId =
-    sessionStorage.getItem("piquant_session") ||
+  const visitorId =
+    localStorage.getItem("piquant_visitor") ||
     (() => {
       const id = crypto.randomUUID();
-      sessionStorage.setItem("piquant_session", id);
+      localStorage.setItem("piquant_visitor", id);
       return id;
     })();
+  let conversationId = null;
 
   let busy = false;
 
@@ -142,7 +79,7 @@
     }
   }
 
-  function addMessage(role, text, attachment) {
+  function addMessage(role, text) {
     if (intro && !intro.dataset.hidden) {
       intro.style.display = "none";
       intro.dataset.hidden = "true";
@@ -159,22 +96,6 @@
     } else {
       bubble.textContent = text;
     }
-
-    if (attachment) {
-      if (attachment.previewUrl) {
-        const img = document.createElement("img");
-        img.src = attachment.previewUrl;
-        img.className = "msg-attachment-img";
-        img.alt = attachment.name;
-        bubble.appendChild(img);
-      } else {
-        const fileTag = document.createElement("div");
-        fileTag.className = "msg-attachment-file";
-        fileTag.textContent = `📎 ${attachment.name}`;
-        bubble.appendChild(fileTag);
-      }
-    }
-
     wrap.appendChild(label);
     wrap.appendChild(bubble);
 
@@ -238,33 +159,49 @@
     return bubble;
   }
 
+  function addPinterestMessage(text, images) {
+    const bubble = addMessage("assistant", text);
+    const grid = document.createElement("div");
+    grid.className = "pinterest-grid";
+    images.forEach((url) => {
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.className = "pinterest-thumb";
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "Résultat Pinterest";
+      img.loading = "lazy";
+      img.onerror = () => link.remove();
+      link.appendChild(img);
+      grid.appendChild(link);
+    });
+    bubble.appendChild(document.createElement("br"));
+    bubble.appendChild(grid);
+    return bubble;
+  }
+
   async function sendMessage(text) {
-    const fileToSend = pendingFile;
-    if (busy || (!text.trim() && !fileToSend)) return;
+    if (busy || !text.trim()) return;
     busy = true;
     sendBtn.disabled = true;
 
-    addMessage("user", text.trim() || (fileToSend ? `Fichier joint : ${fileToSend.name}` : ""), fileToSend);
+    addMessage("user", text);
     input.value = "";
     autoGrow();
-    pendingFile = null;
-    renderFilePreview();
     addThinking();
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          sessionId,
-          file: fileToSend
-            ? { name: fileToSend.name, mimeType: fileToSend.mimeType, data: fileToSend.data }
-            : undefined,
-        }),
+        body: JSON.stringify({ message: text, visitorId, conversationId }),
       });
       const data = await res.json();
       removeThinking();
+
+      if (data.conversationId) conversationId = data.conversationId;
 
       if (!res.ok) {
         const bubble = addMessage("assistant", data.error || "Une erreur est survenue.");
@@ -273,6 +210,8 @@
         addImageMessage(data.reply, data.image);
       } else if (data.type === "pdf") {
         addPdfMessage(data.reply, data.pdfUrl);
+      } else if (data.type === "pinterest") {
+        addPinterestMessage(data.reply, data.images);
       } else {
         addMessage("assistant", data.reply);
       }
@@ -320,8 +259,9 @@
       await fetch("/api/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId: conversationId }),
       });
     } catch (_) {}
+    conversationId = null;
   });
 })();
