@@ -1935,6 +1935,43 @@ body {
   .auth-submit:active { transform: translateY(0); }
   .auth-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
+  .auth-google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(233,193,154,0.22);
+    background: #fdfaf6;
+    color: #2b2118;
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  .auth-google-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
+  .auth-google-btn:active { transform: translateY(0); }
+  .auth-google-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 14px;
+    color: rgba(233,193,154,0.4);
+    font-size: 0.76rem;
+    font-family: 'Inter', sans-serif;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(233,193,154,0.18);
+  }
+
   .auth-link-btn {
     display: block;
     width: 100%;

@@ -224,6 +224,18 @@
     <div class="auth-error" id="authError"></div>
     <div class="auth-error" id="configWarning" style="background: rgba(244,162,89,0.12); border-color: rgba(244,162,89,0.35); color: #f4a259;"></div>
 
+    <!-- Connexion avec Google : visible dans les deux modes (connexion / inscription) -->
+    <button type="button" id="googleSignInBtn" class="auth-google-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.61z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33A9 9 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.97 10.71a5.41 5.41 0 0 1 0-3.42V4.96H.96a9 9 0 0 0 0 8.08l3.01-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+      </svg>
+      Continuer avec Google
+    </button>
+    <div class="auth-divider"><span>ou</span></div>
+
     <!-- Formulaire de connexion -->
     <form class="auth-form" id="loginForm">
       <div class="form-field">
@@ -847,6 +859,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const logoutBtn = document.getElementById('logoutBtn');
   const configWarning = document.getElementById('configWarning');
   const guestBtn = document.getElementById('guestBtn');
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
 
   if (FIREBASE_NOT_CONFIGURED) {
     configWarning.textContent = "⚠️ Firebase n'est pas encore configuré : la connexion ne fonctionnera pas tant que vous n'aurez pas remplacé les clés REMPLACEZ_MOI dans le code (voir instructions).";
@@ -928,7 +941,8 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       'auth/invalid-credential': "E-mail ou mot de passe incorrect.",
       'auth/network-request-failed': "Problème de connexion réseau.",
       'auth/too-many-requests': "Trop de tentatives. Réessaie dans quelques minutes.",
-      'auth/missing-email': "Merci de renseigner ton adresse e-mail."
+      'auth/missing-email': "Merci de renseigner ton adresse e-mail.",
+      'auth/account-exists-with-different-credential': "Un compte existe déjà avec cet e-mail via une autre méthode de connexion."
     };
     return map[code] || "Une erreur est survenue. Réessaie.";
   }
@@ -943,6 +957,24 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     authScreen.classList.remove('visible');
     appRoot.classList.remove('app-hidden');
     splash.classList.add('fade-out');
+  });
+
+  // --- Connexion avec Google ---
+  googleSignInBtn.addEventListener('click', function () {
+    clearError();
+    googleSignInBtn.disabled = true;
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .catch((err) => {
+        // L'utilisateur a simplement fermé la fenêtre : pas une vraie erreur.
+        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+        if (err.code === 'auth/popup-blocked') {
+          showError("La fenêtre Google a été bloquée par le navigateur. Autorise les pop-ups puis réessaie.");
+          return;
+        }
+        showError(friendlyError(err.code));
+      })
+      .finally(() => { googleSignInBtn.disabled = false; });
   });
 
   // --- Jauge de robustesse du mot de passe ---
