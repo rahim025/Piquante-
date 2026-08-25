@@ -1402,6 +1402,18 @@ body {
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  .auth-seo-intro {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: rgba(233,193,154,0.55);
+    text-align: center;
+    max-width: 340px;
+    margin: 10px auto 0;
+    opacity: 0;
+    animation: welcome-text-in 0.5s ease 1.9s forwards;
+  }
+
   .success-overlay {
     position: absolute;
     inset: 0;
@@ -1695,6 +1707,7 @@ body {
     .hh-walker { display: none; }
     .auth-header .auth-logo { opacity: 1; transform: translate(-50%, 0) scale(1); animation: none; }
     .welcome-tagline { opacity: 1; transform: none; animation: none; }
+    .auth-seo-intro { opacity: 1; transform: none; animation: none; }
   }
 
   /* Respiration douce du hérisson "face caméra" une fois arrivé */
@@ -2103,6 +2116,32 @@ body {
   .chat-msg.mine { align-self: flex-end; background: linear-gradient(135deg,#c9531c,#f4a259); color: #1a1109; }
   .chat-msg.theirs { align-self: flex-start; background: rgba(233,193,154,0.08); color: #f0dcc3; }
   .chat-msg .chat-msg-time { font-size: 0.65rem; opacity: 0.6; margin-top: 3px; }
+  .chat-msg-action {
+    background: none; border: none; padding: 0 0 0 8px; margin-left: 6px;
+    font-family: 'Inter', sans-serif; font-size: 0.65rem; text-decoration: underline;
+    color: inherit; opacity: 0.75; cursor: pointer;
+  }
+  .chat-msg-action:hover { opacity: 1; }
+  .chat-msg-action:disabled { cursor: default; text-decoration: none; opacity: 0.6; }
+
+  .thread-header { position: relative; }
+  .thread-more {
+    margin-left: auto; background: none; border: none; color: #9a8570;
+    font-size: 1.1rem; cursor: pointer; padding: 4px 8px;
+  }
+  .thread-more:hover { color: #f4a259; }
+  .thread-mod-menu {
+    position: absolute; top: 100%; right: 10px; z-index: 5;
+    background: #201812; border: 1px solid rgba(233,193,154,0.18); border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35); overflow: hidden; min-width: 200px;
+  }
+  .thread-mod-menu.hidden { display: none; }
+  .thread-mod-menu button {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    padding: 11px 14px; color: #f0dcc3; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer;
+  }
+  .thread-mod-menu button:hover { background: rgba(233,193,154,0.08); }
+  .thread-mod-menu button + button { border-top: 1px solid rgba(233,193,154,0.1); }
 
   .chat-input-row {
     display: flex; gap: 8px; padding: 12px; border-top: 1px solid rgba(233,193,154,0.1);
@@ -2200,3 +2239,253 @@ body {
     display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
     background: rgba(0,0,0,0.15); border-radius: 8px; padding: 6px 10px; font-size: 0.82rem;
   }
+
+/* ============================================================
+   LANDING PAGE — présentation publique avant connexion
+   ============================================================ */
+
+#landingScreen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--moss-950, #0b0f0a);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#landingScreen.visible { display: block; }
+
+.landing-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+}
+.landing-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: #ede7d9;
+}
+.landing-brand img { border-radius: 7px; display: block; }
+.landing-nav-login {
+  background: none;
+  border: 1px solid rgba(233,193,154,0.28);
+  color: #e9c19a;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+.landing-nav-login:hover { border-color: #e69a5f; color: #e69a5f; }
+
+.landing-hero {
+  text-align: center;
+  padding: 48px 0 30px;
+}
+.landing-hero h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: clamp(2.1rem, 8vw, 3.2rem);
+  color: #ede7d9;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.landing-hero-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  color: #e69a5f;
+  margin: 0 0 18px;
+}
+.landing-hero-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #a9a294;
+  max-width: 46ch;
+  margin: 0 auto 30px;
+}
+.landing-cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.landing-cta {
+  padding: 13px 26px;
+  border-radius: 100px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+}
+.landing-cta.primary {
+  background: linear-gradient(135deg, #c9531c, #f4a259);
+  color: #1a1109;
+}
+.landing-cta.primary:hover { filter: brightness(1.07); }
+.landing-cta.secondary {
+  background: transparent;
+  border: 1px solid rgba(233,193,154,0.3);
+  color: #ede7d9;
+}
+.landing-cta.secondary:hover { border-color: #e69a5f; color: #e69a5f; }
+
+.landing-section {
+  padding: 34px 0;
+  border-top: 1px solid rgba(58,74,61,0.6);
+}
+.landing-section h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: #ede7d9;
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.landing-card {
+  background: #1b2420;
+  border: 1px solid rgba(58,74,61,0.7);
+  border-radius: 14px;
+  padding: 18px;
+}
+.landing-card-icon { font-size: 1.5rem; display: block; margin-bottom: 8px; }
+.landing-card h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ede7d9;
+  margin: 0 0 6px;
+}
+.landing-card p {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #a9a294;
+  margin: 0;
+}
+
+.landing-examples {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.landing-examples li {
+  background: #1b2420;
+  border: 1px solid rgba(58,74,61,0.7);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  color: #ede7d9;
+  font-style: italic;
+}
+
+.landing-why {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.landing-why li {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #cfc9ba;
+}
+.landing-why strong { color: #e69a5f; }
+
+.landing-faq-item {
+  margin-bottom: 18px;
+}
+.landing-faq-item h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #ede7d9;
+  margin: 0 0 4px;
+}
+.landing-faq-item p {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.87rem;
+  line-height: 1.55;
+  color: #a9a294;
+  margin: 0;
+}
+.landing-faq-item a { color: #e69a5f; }
+
+.landing-privacy-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #a9a294;
+  text-align: center;
+  max-width: 56ch;
+  margin: 0 auto;
+}
+.landing-privacy-text a { color: #e69a5f; }
+
+.landing-footer {
+  padding: 30px 0 10px;
+  border-top: 1px solid rgba(58,74,61,0.6);
+  text-align: center;
+}
+.landing-footer-brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  color: #ede7d9;
+  margin-bottom: 10px;
+}
+.landing-footer-links {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.landing-footer-links a {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  color: #a9a294;
+  text-decoration: none;
+}
+.landing-footer-links a:hover { color: #e69a5f; }
+.landing-footer-credit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--moss-700, #3a4a3d);
+}
+
+@media (max-width: 480px) {
+  .landing-hero { padding: 34px 0 24px; }
+  .landing-cta-row { flex-direction: column; }
+  .landing-cta { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #landingScreen * { animation: none !important; transition: none !important; }
+}

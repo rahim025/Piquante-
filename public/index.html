@@ -27,6 +27,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="logo.svg" />
 <link rel="stylesheet" href="style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Piquant IA",
+  "description": "Assistant IA gratuit en français : réponses directes, rédaction de messages, génération d'images et de documents PDF, lecture à voix haute.",
+  "applicationCategory": "AssistantApplication",
+  "operatingSystem": "Web",
+  "url": "https://piquant-ia.onrender.com/",
+  "image": "https://piquant-ia.onrender.com/og-image.png",
+  "inLanguage": "fr",
+  "author": { "@type": "Person", "name": "Rahim Batchabi" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+}
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -99,10 +114,147 @@
   <div class="splash-bar"></div>
 </div>
 
+<div id="landingScreen">
+  <div class="landing-inner">
+
+    <header class="landing-nav">
+      <div class="landing-brand"><img src="logo.svg" width="26" height="26" alt="" /> Piquant</div>
+      <button type="button" id="landingLoginBtn" class="landing-nav-login">Se connecter</button>
+    </header>
+
+    <section class="landing-hero">
+      <h1>Piquant IA</h1>
+      <p class="landing-hero-sub">L'assistant IA qui va droit au but.</p>
+      <p class="landing-hero-desc">
+        Pas de détour, pas de blabla. Piquant répond directement à tes questions,
+        rédige et corrige tes messages, génère des images et des documents PDF,
+        et peut même te lire ses réponses à voix haute — gratuitement, en français.
+      </p>
+      <div class="landing-cta-row">
+        <button type="button" id="landingTryBtn" class="landing-cta primary">Essayer gratuitement</button>
+        <button type="button" id="landingSignupBtn" class="landing-cta secondary">Créer un compte</button>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <h2>Ce que Piquant sait faire</h2>
+      <div class="landing-grid">
+        <div class="landing-card">
+          <span class="landing-card-icon">💬</span>
+          <h3>Réponses directes</h3>
+          <p>Une question, une réponse claire — sans détour ni remplissage inutile.</p>
+        </div>
+        <div class="landing-card">
+          <span class="landing-card-icon">✍️</span>
+          <h3>Rédaction</h3>
+          <p>Messages, e-mails, textes : Piquant rédige et corrige avec toi.</p>
+        </div>
+        <div class="landing-card">
+          <span class="landing-card-icon">🖼️</span>
+          <h3>Génération d'images</h3>
+          <p>Décris une image, Piquant la crée pour toi en quelques secondes.</p>
+        </div>
+        <div class="landing-card">
+          <span class="landing-card-icon">📄</span>
+          <h3>Documents PDF</h3>
+          <p>Demande un document, reçois un PDF prêt à télécharger.</p>
+        </div>
+        <div class="landing-card">
+          <span class="landing-card-icon">🔈</span>
+          <h3>Voix</h3>
+          <p>Écoute les réponses de Piquant à voix haute, en un clic.</p>
+        </div>
+        <div class="landing-card">
+          <span class="landing-card-icon">🕒</span>
+          <h3>Historique</h3>
+          <p>Retrouve tes conversations précédentes une fois connecté.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <h2>Quelques exemples</h2>
+      <ul class="landing-examples">
+        <li>« Résume-moi ce texte en 3 phrases »</li>
+        <li>« Génère une image d'un hérisson dans une forêt »</li>
+        <li>« Aide-moi à rédiger un e-mail de candidature »</li>
+        <li>« Fais-moi un PDF avec les bases du budget personnel »</li>
+        <li>« Explique-moi la photosynthèse simplement »</li>
+      </ul>
+    </section>
+
+    <section class="landing-section">
+      <h2>Pourquoi Piquant ?</h2>
+      <ul class="landing-why">
+        <li><strong>Gratuit</strong> — aucune carte bancaire nécessaire pour commencer.</li>
+        <li><strong>En français</strong> — pensé et conçu pour les francophones.</li>
+        <li><strong>Direct</strong> — Piquant va à l'essentiel, comme son nom l'indique.</li>
+        <li><strong>Sans engagement</strong> — teste sans même créer de compte.</li>
+      </ul>
+    </section>
+
+    <section class="landing-section" id="landingFaq">
+      <h2>Questions fréquentes</h2>
+      <div class="landing-faq-item">
+        <h3>Qu'est-ce que Piquant IA ?</h3>
+        <p>Piquant est un assistant IA en français qui répond à tes questions, rédige, génère des images et des PDF, et peut lire ses réponses à voix haute.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Piquant est-il gratuit ?</h3>
+        <p>Oui, l'utilisation de base de Piquant est gratuite.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Faut-il créer un compte ?</h3>
+        <p>Non. Tu peux essayer Piquant sans compte. Un compte te permet en plus de retrouver ton historique de conversations.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Puis-je utiliser Piquant sans compte ?</h3>
+        <p>Oui, le bouton « Essayer gratuitement » te donne un accès immédiat, sans inscription.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Comment fonctionne l'historique ?</h3>
+        <p>Une fois connecté, tes conversations sont sauvegardées et accessibles à tout moment depuis ton compte.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Mes conversations sont-elles privées ?</h3>
+        <p>Oui. Elles sont liées à ton compte et ne sont visibles par personne d'autre. Voir notre <a href="privacy.html">politique de confidentialité</a>.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Comment supprimer mon compte ?</h3>
+        <p>Tu peux demander la suppression de ton compte et de tes données à tout moment — voir la section correspondante de notre politique de confidentialité.</p>
+      </div>
+      <div class="landing-faq-item">
+        <h3>Comment contacter l'équipe ?</h3>
+        <p>Les coordonnées de contact sont indiquées dans notre <a href="privacy.html">politique de confidentialité</a>.</p>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <h2>Confidentialité</h2>
+      <p class="landing-privacy-text">
+        Piquant ne vend jamais tes données et ne les utilise pas à des fins publicitaires.
+        Ton historique de conversation reste privé et lié à ton compte.
+        <a href="privacy.html">Lire la politique de confidentialité complète</a>.
+      </p>
+    </section>
+
+    <footer class="landing-footer">
+      <div class="landing-footer-brand">Piquant IA</div>
+      <nav class="landing-footer-links">
+        <a href="privacy.html">Politique de confidentialité</a>
+        <a href="terms.html">Conditions d'utilisation</a>
+      </nav>
+      <div class="landing-footer-credit">Créé par Rahim Batchabi</div>
+    </footer>
+
+  </div>
+</div>
+
 <div id="authScreen">
   <div class="auth-card">
     <div class="auth-header">
       <div class="welcome-scene">
+
         <div class="scene-ground"></div>
 
         <!-- Le hérisson arrive de profil, en marchant -->
@@ -183,6 +335,12 @@
       </div>
 
       <p class="welcome-tagline">Bienvenue sur Piquant IA</p>
+
+      <p class="auth-seo-intro">
+        Piquant est un assistant IA gratuit en français qui répond directement à tes questions,
+        rédige et corrige tes messages, génère des images et des documents PDF, et peut lire
+        ses réponses à voix haute. Connecte-toi ou crée un compte gratuit pour commencer.
+      </p>
 
       <!-- Scène spéciale inscription : un personnage arrive avec une valise,
            la pose, s'y adosse, et les champs du formulaire en sortent -->
@@ -536,7 +694,7 @@
         <div class="quill" style="--i:23"></div>
         <div class="core"></div>
       </div>
-      <h1 class="hero-title"><span class="hero-title-in">Une question&nbsp;?</span> <em class="pose-la">Pose-la.</em></h1>
+      <h2 class="hero-title"><span class="hero-title-in">Une question&nbsp;?</span> <em class="pose-la">Pose-la.</em></h2>
       <p class="lede">Piquant est un assistant qui répond droit au but — pas de détour, pas de blabla. Écris ce que tu cherches, ci-dessous.</p>
       <div class="prompt-chips">
         <button class="chip" data-prompt="Explique-moi un sujet compliqué simplement">Explique-moi un sujet compliqué</button>
@@ -568,7 +726,7 @@
         </svg>
       </button>
     </form>
-    <p class="disclaimer">Piquant peut se tromper. Vérifie les informations importantes.</p>
+    <p class="disclaimer">Piquant peut produire des erreurs. Vérifie les informations importantes avant de les utiliser.</p>
     <p class="credit">Créé par <span>Rahim Batchabi</span></p>
   </footer>
 
@@ -617,6 +775,11 @@
             <button class="thread-back" id="threadBackBtn" aria-label="Retour">&larr;</button>
             <span class="user-avatar" id="threadAvatar"></span>
             <span class="thread-header-name" id="threadName"></span>
+            <button class="thread-more" id="threadMoreBtn" aria-label="Options" title="Options">⋮</button>
+          </div>
+          <div class="thread-mod-menu hidden" id="threadModMenu">
+            <button type="button" id="blockUserBtn">🚫 Bloquer cet utilisateur</button>
+            <button type="button" id="reportUserBtn">⚠️ Signaler cet utilisateur</button>
           </div>
           <div class="chat-messages" id="privateMessages"></div>
           <div class="chat-input-row">
@@ -1063,8 +1226,8 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
         return createdUser.updateProfile({ displayName: `${firstName} ${lastName}`.trim() });
       })
       .then(() => {
-        // Profil minimal enregistré ; le reste (photo, téléphone, genre...)
-        // pourra être complété plus tard depuis les paramètres du compte.
+        // Inscription minimale : seuls prénom, nom, email et mot de passe sont requis.
+        // Le reste (photo, téléphone, genre...) se complète plus tard, depuis le profil.
         return firebase.firestore().collection('users').doc(createdUser.uid).set({
           firstName,
           lastName,
@@ -1148,6 +1311,9 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   let splashMinTimeElapsed = false;
   setTimeout(() => { splashMinTimeElapsed = true; revealNextScreen(); }, 1300);
 
+  const landingScreen = document.getElementById('landingScreen');
+  let showAuthDirectly = false; // devient vrai quand on clique "Créer un compte" / "Se connecter" depuis la landing
+
   let authResolved = false;
   let isLoggedIn = false;
 
@@ -1159,14 +1325,34 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     // le formulaire reste affiché tel quel jusqu'à la fin du délai prévu.
     if (deferAuthReveal) return;
 
-    if (isLoggedIn) {
+    if (isLoggedIn || guestMode) {
+      landingScreen.classList.remove('visible');
       authScreen.classList.remove('visible');
       appRoot.classList.remove('app-hidden');
-    } else {
+    } else if (showAuthDirectly) {
+      landingScreen.classList.remove('visible');
       authScreen.classList.add('visible');
+      appRoot.classList.add('app-hidden');
+    } else {
+      landingScreen.classList.add('visible');
+      authScreen.classList.remove('visible');
       appRoot.classList.add('app-hidden');
     }
   }
+
+  document.getElementById('landingTryBtn').addEventListener('click', function () {
+    guestBtn.click(); // réutilise exactement la même logique que "Utiliser sans compte"
+  });
+  document.getElementById('landingSignupBtn').addEventListener('click', function () {
+    showAuthDirectly = true;
+    setMode('signup');
+    revealNextScreen();
+  });
+  document.getElementById('landingLoginBtn').addEventListener('click', function () {
+    showAuthDirectly = true;
+    setMode('login');
+    revealNextScreen();
+  });
 
   auth.onAuthStateChanged(function (user) {
     if (guestMode && !user) return; // ne pas repasser à l'écran de connexion en mode invité
@@ -1230,7 +1416,15 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   let publicUnsub = null;
   let privateUnsub = null;
   let currentThreadUid = null; // uid de l'utilisateur avec qui on discute en privé
+  let blockedUids = new Set(); // utilisateurs bloqués par moi
   const usersCache = {}; // uid -> { name, online, lastSeen }
+
+  function loadBlockedUids(uid) {
+    return db.collection('users').doc(uid).get().then(function (snap) {
+      const data = snap.data() || {};
+      blockedUids = new Set(data.blockedUids || []);
+    }).catch(() => { blockedUids = new Set(); });
+  }
 
   function avatarLetter(name) {
     return (name || '?').trim().charAt(0).toUpperCase();
@@ -1288,7 +1482,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const userListEl = document.getElementById('userList');
 
   function renderUserList() {
-    const entries = Object.entries(usersCache).filter(([uid]) => uid !== (currentUser && currentUser.uid));
+    const entries = Object.entries(usersCache).filter(([uid]) => uid !== (currentUser && currentUser.uid) && !blockedUids.has(uid));
     const now = Date.now();
     const onlineCountEl = document.getElementById('onlineCount');
     const onlineTotal = Object.values(usersCache).filter(function (u) {
@@ -1336,9 +1530,13 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   function renderPublicMessage(doc) {
     const m = doc.data();
     const mine = currentUser && m.uid === currentUser.uid;
+    if (!mine && blockedUids.has(m.uid)) return null; // utilisateur bloqué : message masqué
     const div = document.createElement('div');
     div.className = 'chat-msg ' + (mine ? 'mine' : 'theirs');
-    div.innerHTML = `${!mine ? `<div class="chat-msg-author">${m.name}</div>` : ''}${escapeHtml(m.text)}<div class="chat-msg-time">${formatTime(m.timestamp)}</div>`;
+    const actionHtml = mine
+      ? `<button class="chat-msg-action" data-action="delete" data-id="${doc.id}">Supprimer</button>`
+      : `<button class="chat-msg-action" data-action="report" data-id="${doc.id}" data-uid="${m.uid}">Signaler</button>`;
+    div.innerHTML = `${!mine ? `<div class="chat-msg-author">${escapeHtml(m.name)}</div>` : ''}${escapeHtml(m.text)}<div class="chat-msg-time">${formatTime(m.timestamp)} ${actionHtml}</div>`;
     return div;
   }
 
@@ -1353,11 +1551,34 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       .onSnapshot(function (snap) {
         publicMessagesEl.innerHTML = '';
         snap.forEach(function (doc) {
-          publicMessagesEl.appendChild(renderPublicMessage(doc));
+          const el = renderPublicMessage(doc);
+          if (el) publicMessagesEl.appendChild(el);
         });
         publicMessagesEl.scrollTop = publicMessagesEl.scrollHeight;
       });
   }
+
+  // --- Modération : suppression de son propre message, signalement d'un message ---
+  publicMessagesEl.addEventListener('click', function (e) {
+    const btn = e.target.closest('.chat-msg-action');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (action === 'delete') {
+      db.collection('publicMessages').doc(id).delete().catch(() => {});
+    } else if (action === 'report') {
+      db.collection('reports').add({
+        type: 'publicMessage',
+        messageId: id,
+        reportedUid: btn.dataset.uid,
+        reportedBy: currentUser.uid,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        btn.textContent = 'Signalé ✓';
+        btn.disabled = true;
+      }).catch(() => {});
+    }
+  });
 
   function sendPublicMessage() {
     const input = document.getElementById('publicInput');
@@ -1386,6 +1607,9 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     currentThreadUid = uid;
     threadAvatarEl.textContent = avatarLetter(name);
     threadNameEl.textContent = name;
+    document.getElementById('threadModMenu').classList.add('hidden');
+    const reportBtn = document.getElementById('reportUserBtn');
+    reportBtn.textContent = '⚠️ Signaler cet utilisateur';
     switchView('viewPrivateThread');
 
     if (privateUnsub) privateUnsub();
@@ -1432,6 +1656,41 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     switchView('viewUserList');
   });
 
+  // --- Menu Bloquer / Signaler dans le fil privé ---
+  const threadMoreBtn = document.getElementById('threadMoreBtn');
+  const threadModMenu = document.getElementById('threadModMenu');
+  threadMoreBtn.addEventListener('click', function () {
+    threadModMenu.classList.toggle('hidden');
+  });
+
+  document.getElementById('blockUserBtn').addEventListener('click', function () {
+    if (!currentUser || !currentThreadUid) return;
+    threadModMenu.classList.add('hidden');
+    db.collection('users').doc(currentUser.uid).set({
+      blockedUids: firebase.firestore.FieldValue.arrayUnion(currentThreadUid)
+    }, { merge: true }).then(function () {
+      blockedUids.add(currentThreadUid);
+      if (privateUnsub) { privateUnsub(); privateUnsub = null; }
+      currentThreadUid = null;
+      renderUserList();
+      switchView('viewUserList');
+    }).catch(() => {});
+  });
+
+  document.getElementById('reportUserBtn').addEventListener('click', function () {
+    if (!currentUser || !currentThreadUid) return;
+    threadModMenu.classList.add('hidden');
+    db.collection('reports').add({
+      type: 'user',
+      reportedUid: currentThreadUid,
+      reportedBy: currentUser.uid,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      const btn = document.getElementById('reportUserBtn');
+      btn.textContent = 'Signalé ✓';
+    }).catch(() => {});
+  });
+
   // --- Navigation dans le panneau (onglets + vues) ---
   function switchView(viewId) {
     document.querySelectorAll('.community-view').forEach(function (v) { v.classList.remove('active'); });
@@ -1476,6 +1735,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     onLogin: function (user) {
       currentUser = user;
       startPresence(user);
+      loadBlockedUids(user.uid).then(renderUserList);
       if (!presenceUnsub) listenPresence();
       if (!publicUnsub) listenPublicChat();
     },
@@ -1486,6 +1746,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       if (privateUnsub) { privateUnsub(); privateUnsub = null; }
       currentUser = null;
       currentThreadUid = null;
+      blockedUids = new Set();
       overlay.classList.remove('open');
     }
   };
