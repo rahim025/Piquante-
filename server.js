@@ -152,12 +152,95 @@ function detectIntent(message) {
     "fais-moi une image", "peux-tu dessiner", "peux tu dessiner", "dessine-moi", "dessine moi",
     "montre-moi une image", "montre moi une image", "affiche une image",
   ];
+  const pinterestKeywords = ["pinterest"];
+  if (pinterestKeywords.some((k) => lower.includes(k))) return "pinterest";
   if (pdfKeywords.some((k) => lower.includes(k))) return "pdf";
   if (imageKeywords.some((k) => lower.includes(k))) return "image";
   return "text";
 }
 
+// Extrait le mot-clé de recherche d'une phrase du type
+// "cherche sur pinterest des chats", "pinterest naruto", etc.
+function extractPinterestQuery(message) {
+  let q = message
+    .replace(/pinterest/gi, "")
+    .replace(/\b(cherche|recherche|trouve|montre[- ]moi|des|des images? de|sur|pour|de|images?)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return q || message.replace(/pinterest/gi, "").trim();
+}
+
 // ---------- Historique des conversations (menu latéral) ----------
+// ============================================================
+// LISTE DES FONCTIONNALITÉS — source unique de vérité
+// ============================================================
+// Le guide du site (guide.html) affiche automatiquement cette liste.
+// Pour ajouter une nouvelle fonctionnalité au guide : ajoute simplement un
+// objet ici, rien à modifier ailleurs (ni dans le HTML, ni en CSS).
+const FEATURES = [
+  {
+    icon: "💬",
+    title: "Poser une question",
+    description: "Piquant répond directement, sans détour. Idéal pour des explications, des définitions, des comparaisons ou des conseils.",
+    examples: [
+      "Explique-moi la photosynthèse simplement",
+      "Quelle est la différence entre le HTML et le CSS ?",
+    ],
+  },
+  {
+    icon: "✍️",
+    title: "Rédiger un message",
+    description: "Demande à Piquant de rédiger, reformuler ou corriger un texte, avec le ton que tu veux.",
+    examples: [
+      "Aide-moi à écrire un message d'excuse à mon prof, ton poli",
+      "Corrige les fautes dans ce texte : ...",
+    ],
+  },
+  {
+    icon: "📄",
+    title: "Générer un document PDF",
+    description: "Piquant peut rédiger un document complet et te le donner en PDF téléchargeable directement dans le chat.",
+    examples: [
+      "Génère un document PDF sur les bienfaits du sport",
+      "Fais-moi un CV en PDF pour un poste de vendeur",
+    ],
+  },
+  {
+    icon: "🎨",
+    title: "Générer une image",
+    description: "Décris ce que tu veux voir : un dessin, une illustration ou une photo réaliste.",
+    examples: [
+      "Dessine-moi un renard dans la neige",
+      "Génère une photo réaliste d'un coucher de soleil sur la plage",
+    ],
+  },
+  {
+    icon: "📌",
+    title: "Rechercher sur Pinterest",
+    description: "Trouve des idées visuelles (déco, mode, inspiration...) directement depuis le chat, en grille cliquable.",
+    examples: [
+      "Pinterest décoration chambre minimaliste",
+      "Cherche sur Pinterest des idées de tatouage",
+    ],
+  },
+  {
+    icon: "🔈",
+    title: "Écouter une réponse",
+    description: "Clique sur l'icône haut-parleur sous n'importe quelle réponse de Piquant pour l'entendre à voix haute.",
+    examples: [],
+  },
+  {
+    icon: "🕒",
+    title: "Historique des conversations",
+    description: "Connecte-toi pour retrouver tes anciennes conversations à tout moment, et démarre une nouvelle discussion quand tu veux avec le bouton \"Nouvelle conversation\".",
+    examples: [],
+  },
+];
+
+app.get("/api/features", (req, res) => {
+  res.json({ features: FEATURES });
+});
+
 app.get("/api/conversations", async (req, res) => {
   try {
     if (!pool) return res.json({ conversations: [] });
@@ -220,6 +303,9 @@ app.post("/api/chat", async (req, res) => {
 
     const intent = detectIntent(message);
 
+    if (intent === "pinterest") {
+      return await handlePinterestRequest(message, history, res, conversationId);
+    }
     if (intent === "image") {
       return await handleImageRequest(message, history, res, conversationId);
     }
@@ -377,6 +463,65 @@ async function tryPollinationsImage(message) {
   } catch (err) {
     console.error("Erreur Pollinations :", err.message);
     return null;
+  }
+}
+
+// Recherche d'images sur Pinterest via une API tierce. Renvoie une grille
+// de miniatures cliquables (pas de "réponds avec un numéro" comme sur un
+// bot Messenger — ici c'est un site web, on affiche direct).
+async function handlePinterestRequest(message, history, res, conversationId) {
+  const query = extractPinterestQuery(message);
+
+  if (!query) {
+    return res.status(400).json({
+      error: "Dis-moi ce que tu veux chercher sur Pinterest (ex : \"pinterest chats mignons\").",
+    });
+  }
+
+  try {
+    const apiUrl = `https://zetbot-page.onrender.com/api/pinterest?query=${encodeURIComponent(query)}`;
+    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(20000) });
+
+    if (!response.ok) {
+      return res.status(502).json({
+        error: "Le service de recherche Pinterest est indisponible pour le moment. Réessaie dans un instant.",
+      });
+    }
+
+    const data = await response.json();
+    const rawPins = data?.data || data?.pins || data?.results || data || [];
+
+    if (!Array.isArray(rawPins) || !rawPins.length) {
+      return res.status(404).json({ error: `Aucun résultat Pinterest trouvé pour "${query}".` });
+    }
+
+    const images = rawPins
+      .slice(0, 12)
+      .map((p) => (typeof p === "string" ? p : p.image || p.url))
+      .filter(Boolean);
+
+    if (!images.length) {
+      return res.status(404).json({ error: `Aucun résultat Pinterest trouvé pour "${query}".` });
+    }
+
+    history.push({ role: "user", parts: [{ text: message }] });
+    history.push({ role: "model", parts: [{ text: `[${images.length} images Pinterest pour "${query}"]` }] });
+    while (history.length > MAX_TURNS * 2) history.shift();
+
+    await saveMessage(conversationId, "model", `[${images.length} images Pinterest pour "${query}"]`);
+
+    res.json({
+      type: "pinterest",
+      reply: `Voici ${images.length} résultats Pinterest pour "${query}" :`,
+      images,
+      query,
+      conversationId,
+    });
+  } catch (err) {
+    console.error("Erreur recherche Pinterest :", err.message);
+    res.status(502).json({
+      error: "Impossible de contacter Pinterest pour le moment. Réessaie dans un instant.",
+    });
   }
 }
 
