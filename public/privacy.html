@@ -4,81 +4,189 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Politique de confidentialité — Piquant IA</title>
-<meta name="robots" content="noindex" />
+<meta name="description" content="Politique de confidentialité de Piquant IA : données collectées, finalités, hébergement, durée de conservation et droits des utilisateurs (RGPD)." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://piquant-ia.onrender.com/privacy.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="logo.svg" />
 <style>
-  body {
-    margin: 0;
-    padding: 32px 20px 80px;
-    background: #151210;
-    color: #e9ded1;
-    font-family: 'Inter', -apple-system, sans-serif;
-    line-height: 1.6;
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: auto;
+  :root{
+    --moss-950:#0b0f0a;
+    --moss-900:#1b2420;
+    --moss-800:#263329;
+    --moss-700:#3a4a3d;
+    --sage:#7c9473;
+    --parchment:#ede7d9;
+    --parchment-dim:#a9a294;
+    --amber:#c97b4a;
+    --amber-bright:#e69a5f;
+    --gold:#f2c879;
   }
-  h1 {
-    font-family: 'Fraunces', serif;
-    color: #f4a259;
-    font-size: 1.7rem;
-  }
-  h2 {
-    font-family: 'Fraunces', serif;
-    color: #f0dcc3;
-    font-size: 1.15rem;
-    margin-top: 34px;
-  }
-  p, li { color: #cbbfae; font-size: 0.95rem; }
-  a { color: #f4a259; }
-  .updated { color: rgba(233,193,154,0.5); font-size: 0.82rem; }
-  .back { display: inline-block; margin-bottom: 20px; color: #f4a259; text-decoration: none; font-size: 0.9rem; }
+  *{box-sizing:border-box;}
+  html,body{margin:0; background:var(--moss-950); color:var(--parchment); font-family:'Inter',sans-serif;}
+  .wrap{max-width:760px; margin:0 auto; padding:36px 22px 80px;}
+  .top{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .top a{color:var(--sage); text-decoration:none; font-size:0.85rem;}
+  .top a:hover{color:var(--amber-bright);}
+  h1{font-family:'Fraunces',serif; font-weight:700; font-size:1.9rem; margin:18px 0 6px; color:var(--parchment);}
+  .updated{color:var(--parchment-dim); font-size:0.82rem; margin-bottom:32px;}
+  h2{font-family:'Fraunces',serif; font-weight:600; font-size:1.2rem; color:var(--amber-bright); margin:34px 0 10px; padding-top:8px; border-top:1px solid var(--moss-700);}
+  h2:first-of-type{border-top:none; padding-top:0;}
+  p, li{line-height:1.65; font-size:0.95rem; color:var(--parchment);}
+  ul{padding-left:20px;}
+  li{margin-bottom:6px;}
+  strong{color:var(--gold); font-weight:600;}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:0.88rem;}
+  th, td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--moss-700); vertical-align:top;}
+  th{color:var(--sage); font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.03em;}
+  .contact-box{background:var(--moss-900); border:1px solid var(--moss-700); border-radius:12px; padding:16px 18px; margin-top:10px;}
+  a{color:var(--amber-bright);}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<a class="back" href="index.html">&larr; Retour à Piquant</a>
+  <div class="top"><a href="index.html">← Retour à Piquant</a></div>
+  <h1>Politique de confidentialité</h1>
+  <p class="updated">Dernière mise à jour : 25 août 2026 — Éditeur : Rahim Batchabi</p>
 
-<h1>Politique de confidentialité</h1>
-<p class="updated">Dernière mise à jour : août 2026</p>
+  <p>
+    Cette politique explique, en langage clair, quelles données Piquant IA ("Piquant", "nous")
+    collecte lorsque tu utilises le site, pourquoi, où elles sont stockées, comment elles sont
+    protégées, et quels sont tes droits. Elle s'applique à toute personne utilisant le site,
+    qu'elle crée un compte ou qu'elle l'utilise en tant qu'invité.
+  </p>
 
-<p>Cette page explique simplement quelles données Piquant collecte, pourquoi, et comment elles sont utilisées.</p>
+  <h2>1. Qui est responsable de tes données ?</h2>
+  <p>
+    Le responsable du traitement des données est <strong>Rahim Batchabi</strong>, créateur et
+    éditeur de Piquant IA. Pour toute question relative à tes données personnelles, tu peux
+    utiliser les coordonnées indiquées à la fin de cette page.
+  </p>
 
-<h2>1. Qui gère ce site</h2>
-<p>Piquant est un projet développé par Batchabi Rahim. Pour toute question sur cette politique ou sur tes données, tu peux le contacter directement.</p>
+  <h2>2. Quelles données sont collectées, et pourquoi</h2>
+  <table>
+    <tr><th>Donnée</th><th>Quand</th><th>Pourquoi</th></tr>
+    <tr>
+      <td>Adresse e-mail</td>
+      <td>Création de compte (email/mot de passe ou via Google)</td>
+      <td>Identifier ton compte, te permettre de te connecter et de réinitialiser ton mot de passe</td>
+    </tr>
+    <tr>
+      <td>Mot de passe</td>
+      <td>Création de compte (méthode email/mot de passe)</td>
+      <td>Sécuriser l'accès à ton compte. Il n'est jamais stocké en clair : il est géré et chiffré par Firebase Authentication (Google), qui n'expose jamais le mot de passe à Piquant lui-même.</td>
+    </tr>
+    <tr>
+      <td>Pseudo / nom affiché, photo de profil</td>
+      <td>Facultatif — saisi par toi, ou fourni automatiquement par Google si tu utilises "Continuer avec Google"</td>
+      <td>Te permettre d'être identifié·e dans l'interface (ex. "Bonjour Marc")</td>
+    </tr>
+    <tr>
+      <td>Contenu des conversations (messages envoyés à l'IA, réponses générées, images, PDF, audio générés)</td>
+      <td>Chaque utilisation du chat</td>
+      <td>Faire fonctionner le service (répondre à tes questions), et te permettre de retrouver l'historique de tes échanges</td>
+    </tr>
+    <tr>
+      <td>Identifiant technique de visite (cookie ou identifiant stocké sur ton appareil)</td>
+      <td>Automatique, dès l'arrivée sur le site</td>
+      <td>Faire le lien entre tes messages et une même conversation, y compris avant que tu ne crées un compte</td>
+    </tr>
+    <tr>
+      <td>Données techniques de connexion (adresse IP, type d'appareil/navigateur, horodatage)</td>
+      <td>Automatique, via l'hébergeur</td>
+      <td>Sécurité, prévention des abus, diagnostic technique en cas de panne</td>
+    </tr>
+  </table>
 
-<h2>2. Données collectées à l'inscription</h2>
-<ul>
-  <li><strong>Prénom et nom</strong> — pour t'identifier dans le chat et t'appeler par ton prénom.</li>
-  <li><strong>Adresse e-mail</strong> — pour créer ton compte et te permettre de réinitialiser ton mot de passe si besoin.</li>
-  <li><strong>Mot de passe</strong> — jamais stocké en clair : il est géré et chiffré par Firebase Authentication (Google), un service standard de l'industrie.</li>
-</ul>
-<p>Tu peux compléter ton profil plus tard (photo, téléphone...) depuis les paramètres de ton compte — ces informations resteront toujours facultatives.</p>
+  <p>
+    Piquant <strong>ne demande pas</strong> ta date de naissance, ton numéro de téléphone ou ton
+    genre lors de l'inscription. Ces informations restent facultatives et ne pourront être
+    ajoutées que plus tard, si tu le souhaites, depuis ton profil.
+  </p>
 
-<h2>3. Données liées à l'utilisation</h2>
-<ul>
-  <li>Les <strong>messages échangés avec l'IA</strong> sont envoyés à nos fournisseurs de génération (Groq pour le texte, Gemini et Pollinations pour les images) afin de produire une réponse. Ils ne sont pas utilisés par Piquant à d'autres fins.</li>
-  <li>Si tu utilises le chat communautaire, tes messages et ton statut « en ligne » sont visibles par les autres utilisateurs connectés.</li>
-  <li>Nous conservons un historique de tes conversations pour te permettre de les retrouver plus tard, tant que tu gardes ton compte.</li>
-</ul>
+  <h2>3. Où tes données sont-elles stockées ?</h2>
+  <ul>
+    <li><strong>Identité et connexion</strong> (email, mot de passe chiffré, pseudo, photo) : hébergées par <strong>Firebase Authentication</strong> et <strong>Firestore</strong>, des services de Google Cloud Platform.</li>
+    <li><strong>Historique des conversations</strong> : hébergé sur la base de données du service utilisé pour l'application (base de données gérée par notre hébergeur applicatif).</li>
+    <li><strong>Application elle-même</strong> (le site que tu utilises) : hébergée chez notre fournisseur d'hébergement web.</li>
+    <li><strong>Réponses de l'IA, images et voix générées</strong> : produites via l'API Google Gemini au moment de la demande ; le contenu généré est ensuite stocké avec ta conversation.</li>
+  </ul>
+  <p style="color:var(--parchment-dim); font-size:0.85rem;">
+    Ces prestataires (Google Cloud / Firebase, notre hébergeur applicatif) peuvent traiter des
+    données en dehors de l'Union européenne. Lorsque c'est le cas, ils s'appuient sur les
+    garanties prévues par le RGPD pour les transferts internationaux de données (clauses
+    contractuelles types de la Commission européenne).
+  </p>
 
-<h2>4. Ce qu'on ne fait pas</h2>
-<ul>
-  <li>Nous ne vendons aucune donnée à des tiers.</li>
-  <li>Nous n'affichons aucune publicité basée sur tes échanges.</li>
-  <li>Nous ne partageons pas ton e-mail ou ton numéro de téléphone avec d'autres utilisateurs.</li>
-</ul>
+  <h2>4. Comment tes données sont-elles protégées ?</h2>
+  <ul>
+    <li>Les mots de passe ne sont jamais stockés en clair : ils sont gérés et chiffrés par Firebase Authentication.</li>
+    <li>Les échanges entre ton appareil et Piquant sont chiffrés (connexion HTTPS).</li>
+    <li>L'accès aux bases de données est restreint techniquement aux services de Piquant ; aucune donnée n'est vendue ni partagée à des fins publicitaires.</li>
+    <li>Les clés d'accès aux services tiers (Google, hébergeur) sont conservées de façon confidentielle et ne sont jamais exposées publiquement.</li>
+  </ul>
 
-<h2>5. Où sont stockées les données</h2>
-<p>Les comptes sont gérés par Firebase (Google). L'historique des conversations est stocké dans une base de données PostgreSQL hébergée (Neon). Le site lui-même tourne sur Render.</p>
+  <h2>5. Combien de temps tes données sont-elles conservées ?</h2>
+  <ul>
+    <li><strong>Compte actif</strong> : tes données sont conservées tant que ton compte existe.</li>
+    <li><strong>Compte inactif</strong> : en l'absence de connexion pendant <strong>24 mois</strong>, ton compte et les données associées pourront être supprimés.</li>
+    <li><strong>Suppression volontaire</strong> : si tu supprimes ton compte, tes données d'identité (email, mot de passe, profil) sont supprimées sous <strong>30 jours</strong>. L'historique de conversation associé est supprimé dans le même délai, sauf obligation légale contraire.</li>
+    <li><strong>Journaux techniques d'hébergement</strong> (sécurité, anti-abus) : conservés au maximum <strong>12 mois</strong>.</li>
+  </ul>
 
-<h2>6. Tes droits</h2>
-<p>Tu peux à tout moment demander la suppression de ton compte et de tes données en contactant le créateur du site. Tu peux aussi te déconnecter et utiliser Piquant sans compte, en mode invité, sans que rien ne soit sauvegardé sur le long terme.</p>
+  <h2>6. Tes droits</h2>
+  <p>Conformément au Règlement général sur la protection des données (RGPD), tu disposes des droits suivants sur tes données personnelles :</p>
+  <ul>
+    <li><strong>Droit d'accès</strong> : savoir quelles données te concernant sont détenues.</li>
+    <li><strong>Droit de rectification</strong> : corriger une donnée inexacte ou incomplète.</li>
+    <li><strong>Droit à l'effacement</strong> : demander la suppression de ton compte et de tes données.</li>
+    <li><strong>Droit à la portabilité</strong> : recevoir tes données dans un format réutilisable.</li>
+    <li><strong>Droit d'opposition et de limitation</strong> : t'opposer à certains traitements ou en demander la limitation.</li>
+    <li><strong>Droit de retirer ton consentement</strong> à tout moment, sans que cela remette en cause la licéité des traitements passés.</li>
+    <li><strong>Droit d'introduire une réclamation</strong> auprès de l'autorité de protection des données compétente (par exemple la CNIL en France) si tu estimes que tes droits ne sont pas respectés.</li>
+  </ul>
 
-<h2>7. Cookies</h2>
-<p>Piquant utilise uniquement le stockage nécessaire à ton maintien de connexion (via Firebase). Aucun cookie publicitaire ou de tracking tiers n'est utilisé.</p>
+  <h2>7. Suppression de ton compte</h2>
+  <p>
+    Tu peux demander la suppression de ton compte et de l'ensemble des données associées à
+    tout moment, directement depuis les paramètres de ton compte une fois cette fonctionnalité
+    disponible, ou en écrivant à l'adresse de contact ci-dessous. La suppression est définitive
+    et irréversible : l'historique de tes conversations, ton profil et ton adresse e-mail sont
+    effacés de nos systèmes sous 30 jours.
+  </p>
 
-<h2>8. Modifications</h2>
-<p>Cette politique peut évoluer. La date de dernière mise à jour est indiquée en haut de cette page.</p>
+  <h2>8. Cookies et identifiants techniques</h2>
+  <p>
+    Piquant utilise uniquement des identifiants techniques strictement nécessaires au
+    fonctionnement du service (te reconnaître d'un message à l'autre, garder ta session
+    connectée). Piquant n'utilise pas de cookies publicitaires ni de traceurs à des fins de
+    profilage marketing.
+  </p>
 
+  <h2>9. Mineurs</h2>
+  <p>
+    Piquant n'est pas destiné aux enfants de moins de 15 ans sans l'accord d'un parent ou
+    tuteur légal, conformément aux règles applicables en matière de consentement numérique.
+  </p>
+
+  <h2>10. Modifications de cette politique</h2>
+  <p>
+    Cette politique peut être mise à jour pour refléter des évolutions du service ou de la
+    réglementation. La date de dernière mise à jour, en haut de cette page, sera actualisée à
+    chaque changement significatif.
+  </p>
+
+  <h2>11. Contact</h2>
+  <div class="contact-box">
+    <p style="margin:0;">
+      Pour exercer tes droits ou pour toute question sur cette politique de confidentialité,
+      contacte : <strong>Rahim Batchabi</strong><br/>
+      <span style="color:var(--parchment-dim); font-size:0.85rem;">(adresse e-mail de contact à ajouter ici)</span>
+    </p>
+  </div>
+
+</div>
 </body>
 </html>
