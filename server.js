@@ -9,6 +9,45 @@ const { Pool } = require("pg");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// --- Limitation de débit simple, sans dépendance externe ---
+// Empêche un même visiteur d'envoyer des centaines de requêtes IA
+// automatiquement. Compteur en mémoire par adresse IP, avec fenêtre glissante.
+const rateBuckets = new Map();
+function rateLimit({ windowMs, max, message }) {
+  return (req, res, next) => {
+    const key = req.ip || req.headers["x-forwarded-for"] || "unknown";
+    const now = Date.now();
+    let bucket = rateBuckets.get(key);
+    if (!bucket || now - bucket.start > windowMs) {
+      bucket = { start: now, count: 0 };
+      rateBuckets.set(key, bucket);
+    }
+    bucket.count++;
+    if (bucket.count > max) {
+      return res.status(429).json({ error: message });
+    }
+    next();
+  };
+}
+// Nettoyage périodique pour éviter une fuite mémoire sur le long terme.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of rateBuckets) {
+    if (now - bucket.start > 30 * 60 * 1000) rateBuckets.delete(key);
+  }
+}, 10 * 60 * 1000);
+
+const chatRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  message: "Tu envoies des messages un peu trop vite. Patiente une minute avant de réessayer.",
+});
+const speakRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  message: "Trop de demandes de lecture audio. Réessaie dans quelques minutes.",
+});
+
 // Groq est utilisé pour tout le texte (chat + contenu des PDF) : gratuit et sans
 // limite bloquante.
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
@@ -282,12 +321,15 @@ app.delete("/api/conversations/:id", async (req, res) => {
   }
 });
 
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", chatRateLimit, async (req, res) => {
   try {
     const { message, visitorId } = req.body || {};
     let { conversationId } = req.body || {};
     if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({ error: "Message vide." });
+    }
+    if (message.length > 4000) {
+      return res.status(400).json({ error: "Message trop long (4000 caractères maximum)." });
     }
 
     conversationId = await ensureConversation(conversationId, visitorId, message);
@@ -636,7 +678,7 @@ async function synthesizeSpeech(text) {
   return Buffer.concat(buffers);
 }
 
-app.post("/api/speak", async (req, res) => {
+app.post("/api/speak", speakRateLimit, async (req, res) => {
   try {
     const { text } = req.body || {};
     if (!text || typeof text !== "string" || !text.trim()) {
