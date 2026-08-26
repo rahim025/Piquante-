@@ -133,6 +133,7 @@
       </nav>
       <div class="landing-nav-buttons">
         <button type="button" id="landingLoginBtn" class="landing-nav-login">Se connecter</button>
+        <button type="button" id="landingSignupNavBtn" class="landing-nav-login">Créer un compte</button>
         <button type="button" id="landingHeaderTryBtn" class="landing-nav-try">Essayer gratuitement</button>
       </div>
     </header>
@@ -1086,8 +1087,8 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   function friendlyError(code) {
     const map = {
       'auth/invalid-email': "Adresse e-mail invalide.",
-      'auth/user-not-found': "Aucun compte ne correspond à cet e-mail.",
-      'auth/wrong-password': "Mot de passe incorrect.",
+      'auth/user-not-found': "E-mail ou mot de passe incorrect.",
+      'auth/wrong-password': "E-mail ou mot de passe incorrect.",
       'auth/email-already-in-use': "Un compte existe déjà avec cet e-mail.",
       'auth/weak-password': "Le mot de passe doit contenir au moins 6 caractères.",
       'auth/invalid-credential': "E-mail ou mot de passe incorrect.",
@@ -1106,6 +1107,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     guestMode = true;
     sidebarUserName.textContent = 'Invité';
     sidebarAvatar.textContent = 'I';
+    landingScreen.classList.remove('visible');
     authScreen.classList.remove('visible');
     appRoot.classList.remove('app-hidden');
     splash.classList.add('fade-out');
@@ -1341,6 +1343,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   document.getElementById('landingLoginBtn').addEventListener('click', function () {
     showAuthDirectly = true;
     setMode('login');
+    revealNextScreen();
+  });
+  document.getElementById('landingSignupNavBtn').addEventListener('click', function () {
+    showAuthDirectly = true;
+    setMode('signup');
     revealNextScreen();
   });
 
