@@ -2294,7 +2294,9 @@ body {
 .landing-nav-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .landing-nav-login {
   background: none;
