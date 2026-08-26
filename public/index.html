@@ -1101,17 +1101,23 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   }
 
   // --- Utiliser sans compte (mode invité) ---
-  let guestMode = false;
+  // Le choix "invité" est mémorisé sur l'appareil : au prochain retour sur le
+  // site, on saute directement l'accueil pour retrouver le chat, comme pour
+  // un compte connecté (qui, lui, est déjà mémorisé automatiquement par Firebase).
+  let guestMode = localStorage.getItem('piquant_guest_mode') === '1';
   let deferAuthReveal = false;
-  guestBtn.addEventListener('click', function () {
+
+  function enterGuestMode() {
     guestMode = true;
+    localStorage.setItem('piquant_guest_mode', '1');
     sidebarUserName.textContent = 'Invité';
     sidebarAvatar.textContent = 'I';
     landingScreen.classList.remove('visible');
     authScreen.classList.remove('visible');
     appRoot.classList.remove('app-hidden');
     splash.classList.add('fade-out');
-  });
+  }
+  guestBtn.addEventListener('click', enterGuestMode);
 
   // --- Connexion avec Google ---
   googleSignInBtn.addEventListener('click', function () {
@@ -1285,6 +1291,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   // --- Déconnexion ---
   logoutBtn.addEventListener('click', function () {
     guestMode = false;
+    localStorage.removeItem('piquant_guest_mode');
     deferAuthReveal = false;
     if (window.PiquantCommunity) window.PiquantCommunity.onLogout();
     auth.signOut();
@@ -1352,7 +1359,9 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   });
 
   auth.onAuthStateChanged(function (user) {
-    if (guestMode && !user) return; // ne pas repasser à l'écran de connexion en mode invité
+    // Ne pas perturber une session invité déjà active (au-delà du tout premier
+    // appel) si Firebase confirme simplement qu'il n'y a pas de compte connecté.
+    if (guestMode && !user && authResolved) return;
     authResolved = true;
     isLoggedIn = !!user;
 
@@ -1369,6 +1378,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
         sidebarAvatar.textContent = name.trim().charAt(0).toUpperCase();
       }
       if (window.PiquantCommunity) window.PiquantCommunity.onLogin(user);
+    } else if (guestMode) {
+      // Session invité restaurée depuis un précédent passage sur le site.
+      sidebarUserName.textContent = 'Invité';
+      sidebarAvatar.style.backgroundImage = '';
+      sidebarAvatar.textContent = 'I';
     } else {
       if (window.PiquantCommunity) window.PiquantCommunity.onLogout();
     }
