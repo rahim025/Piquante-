@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://piquant-ia.onrender.com/sitemap.xml
