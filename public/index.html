@@ -3,25 +3,31 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Piquant IA — l'assistant qui va droit au but</title>
-<meta name="description" content="Piquant est un assistant IA gratuit en français qui répond directement à tes questions, rédige tes messages, génère des images et des documents PDF — sans détour, sans blabla." />
+<title>Piquant IA – L'intelligence artificielle qui va droit au but</title>
+<meta name="description" content="Piquant IA est un assistant intelligent qui vous aide à répondre à vos questions, rédiger vos textes, apprendre, programmer et trouver des idées." />
 <meta name="keywords" content="IA, assistant IA, chatbot français, Piquant, Bénin, intelligence artificielle, génération d'images" />
 <meta name="author" content="Batchabi Rahim" />
+<meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://piquant-ia.onrender.com/" />
 
 <!-- Open Graph (aperçu sur Facebook, WhatsApp, LinkedIn...) -->
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Piquant IA — l'assistant qui va droit au but" />
-<meta property="og:description" content="Un assistant IA gratuit en français : réponses directes, rédaction, images et PDF générés en un message." />
+<meta property="og:site_name" content="Piquant IA" />
+<meta property="og:title" content="PIQUANT IA — L'IA qui va droit au but." />
+<meta property="og:description" content="Piquant IA est un assistant intelligent qui vous aide à répondre à vos questions, rédiger vos textes, apprendre, programmer et trouver des idées." />
 <meta property="og:image" content="https://piquant-ia.onrender.com/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Piquant IA — L'IA qui va droit au but." />
 <meta property="og:url" content="https://piquant-ia.onrender.com/" />
 <meta property="og:locale" content="fr_FR" />
 
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Piquant IA — l'assistant qui va droit au but" />
-<meta name="twitter:description" content="Un assistant IA gratuit en français : réponses directes, rédaction, images et PDF générés en un message." />
+<meta name="twitter:title" content="PIQUANT IA — L'IA qui va droit au but." />
+<meta name="twitter:description" content="Piquant IA est un assistant intelligent qui vous aide à répondre à vos questions, rédiger vos textes, apprendre, programmer et trouver des idées." />
 <meta name="twitter:image" content="https://piquant-ia.onrender.com/og-image.png" />
+<meta name="twitter:image:alt" content="Piquant IA — L'IA qui va droit au but." />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -118,31 +124,35 @@
   <div class="landing-inner">
 
     <header class="landing-nav">
-      <div class="landing-brand"><img src="logo.svg" width="26" height="26" alt="" /> Piquant</div>
-      <button type="button" id="landingLoginBtn" class="landing-nav-login">Se connecter</button>
+      <div class="landing-brand"><img src="logo.svg" width="26" height="26" alt="" /> Piquant IA</div>
+      <nav class="landing-nav-links">
+        <a href="#landingTop">Accueil</a>
+        <a href="#landingFeatures">Fonctionnalités</a>
+        <a href="about.html">À propos</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="landing-nav-buttons">
+        <button type="button" id="landingLoginBtn" class="landing-nav-login">Se connecter</button>
+        <button type="button" id="landingHeaderTryBtn" class="landing-nav-try">Essayer gratuitement</button>
+      </div>
     </header>
 
-    <section class="landing-hero">
-      <h1>Piquant IA</h1>
-      <p class="landing-hero-sub">L'assistant IA qui va droit au but.</p>
-      <p class="landing-hero-desc">
-        Pas de détour, pas de blabla. Piquant répond directement à tes questions,
-        rédige et corrige tes messages, génère des images et des documents PDF,
-        et peut même te lire ses réponses à voix haute — gratuitement, en français.
-      </p>
+    <section class="landing-hero" id="landingTop">
+      <h1>Piquant IA — L'IA qui va droit au but.</h1>
+      <p class="landing-hero-desc">Pose ta question. Obtiens une réponse claire. Passe à l'action.</p>
       <div class="landing-cta-row">
         <button type="button" id="landingTryBtn" class="landing-cta primary">Essayer gratuitement</button>
-        <button type="button" id="landingSignupBtn" class="landing-cta secondary">Créer un compte</button>
+        <button type="button" id="landingGuestBtn2" class="landing-cta secondary">Utiliser sans compte</button>
       </div>
     </section>
 
-    <section class="landing-section">
-      <h2>Ce que Piquant sait faire</h2>
+    <section class="landing-section" id="landingFeatures">
+      <h2>Fonctionnalités</h2>
       <div class="landing-grid">
         <div class="landing-card">
           <span class="landing-card-icon">💬</span>
-          <h3>Réponses directes</h3>
-          <p>Une question, une réponse claire — sans détour ni remplissage inutile.</p>
+          <h3>Questions et réponses</h3>
+          <p>Pose n'importe quelle question, reçois une réponse directe et claire.</p>
         </div>
         <div class="landing-card">
           <span class="landing-card-icon">✍️</span>
@@ -150,101 +160,80 @@
           <p>Messages, e-mails, textes : Piquant rédige et corrige avec toi.</p>
         </div>
         <div class="landing-card">
-          <span class="landing-card-icon">🖼️</span>
-          <h3>Génération d'images</h3>
-          <p>Décris une image, Piquant la crée pour toi en quelques secondes.</p>
+          <span class="landing-card-icon">📚</span>
+          <h3>Apprentissage</h3>
+          <p>Fais-toi expliquer un sujet compliqué, simplement et sans détour.</p>
         </div>
         <div class="landing-card">
-          <span class="landing-card-icon">📄</span>
-          <h3>Documents PDF</h3>
-          <p>Demande un document, reçois un PDF prêt à télécharger.</p>
+          <span class="landing-card-icon">💻</span>
+          <h3>Programmation</h3>
+          <p>Demande de l'aide pour écrire, comprendre ou corriger du code.</p>
         </div>
         <div class="landing-card">
-          <span class="landing-card-icon">🔈</span>
-          <h3>Voix</h3>
-          <p>Écoute les réponses de Piquant à voix haute, en un clic.</p>
+          <span class="landing-card-icon">📊</span>
+          <h3>Analyse</h3>
+          <p>Fais analyser un texte, une situation ou des données pour y voir clair.</p>
         </div>
         <div class="landing-card">
-          <span class="landing-card-icon">🕒</span>
-          <h3>Historique</h3>
-          <p>Retrouve tes conversations précédentes une fois connecté.</p>
+          <span class="landing-card-icon">💡</span>
+          <h3>Génération d'idées</h3>
+          <p>Trouve rapidement des idées concrètes pour avancer sur un projet.</p>
         </div>
       </div>
     </section>
 
     <section class="landing-section">
-      <h2>Quelques exemples</h2>
-      <ul class="landing-examples">
-        <li>« Résume-moi ce texte en 3 phrases »</li>
-        <li>« Génère une image d'un hérisson dans une forêt »</li>
-        <li>« Aide-moi à rédiger un e-mail de candidature »</li>
-        <li>« Fais-moi un PDF avec les bases du budget personnel »</li>
-        <li>« Explique-moi la photosynthèse simplement »</li>
-      </ul>
+      <h2>Comment ça marche ?</h2>
+      <ol class="landing-steps">
+        <li><span class="landing-step-num">1</span> Pose ta question.</li>
+        <li><span class="landing-step-num">2</span> Piquant analyse ta demande.</li>
+        <li><span class="landing-step-num">3</span> Tu reçois ta réponse.</li>
+      </ol>
     </section>
 
     <section class="landing-section">
       <h2>Pourquoi Piquant ?</h2>
       <ul class="landing-why">
-        <li><strong>Gratuit</strong> — aucune carte bancaire nécessaire pour commencer.</li>
-        <li><strong>En français</strong> — pensé et conçu pour les francophones.</li>
-        <li><strong>Direct</strong> — Piquant va à l'essentiel, comme son nom l'indique.</li>
-        <li><strong>Sans engagement</strong> — teste sans même créer de compte.</li>
+        <li><strong>Rapidité</strong> — des réponses générées en quelques secondes.</li>
+        <li><strong>Simplicité</strong> — une interface claire, sans complexité inutile.</li>
+        <li><strong>Réponses directes</strong> — droit au but, pas de détour, pas de blabla.</li>
+        <li><strong>Accessibilité</strong> — gratuit, en français, utilisable sans compte.</li>
       </ul>
     </section>
 
     <section class="landing-section" id="landingFaq">
-      <h2>Questions fréquentes</h2>
+      <h2>FAQ</h2>
       <div class="landing-faq-item">
         <h3>Qu'est-ce que Piquant IA ?</h3>
-        <p>Piquant est un assistant IA en français qui répond à tes questions, rédige, génère des images et des PDF, et peut lire ses réponses à voix haute.</p>
-      </div>
-      <div class="landing-faq-item">
-        <h3>Piquant est-il gratuit ?</h3>
-        <p>Oui, l'utilisation de base de Piquant est gratuite.</p>
+        <p>Piquant IA est un assistant intelligent qui aide à répondre à des questions, rédiger des textes, apprendre, programmer et trouver des idées.</p>
       </div>
       <div class="landing-faq-item">
         <h3>Faut-il créer un compte ?</h3>
-        <p>Non. Tu peux essayer Piquant sans compte. Un compte te permet en plus de retrouver ton historique de conversations.</p>
+        <p>Non. Tu peux utiliser Piquant sans compte. Un compte permet en plus de retrouver ton historique de conversations.</p>
       </div>
       <div class="landing-faq-item">
-        <h3>Puis-je utiliser Piquant sans compte ?</h3>
-        <p>Oui, le bouton « Essayer gratuitement » te donne un accès immédiat, sans inscription.</p>
+        <h3>Peut-on utiliser Piquant sans compte ?</h3>
+        <p>Oui, le bouton « Utiliser sans compte » donne un accès immédiat, sans inscription.</p>
       </div>
       <div class="landing-faq-item">
-        <h3>Comment fonctionne l'historique ?</h3>
-        <p>Une fois connecté, tes conversations sont sauvegardées et accessibles à tout moment depuis ton compte.</p>
+        <h3>Piquant IA est-il gratuit ?</h3>
+        <p>Oui, l'utilisation de base de Piquant IA est gratuite.</p>
       </div>
       <div class="landing-faq-item">
-        <h3>Mes conversations sont-elles privées ?</h3>
-        <p>Oui. Elles sont liées à ton compte et ne sont visibles par personne d'autre. Voir notre <a href="privacy.html">politique de confidentialité</a>.</p>
+        <h3>Comment supprimer son compte ?</h3>
+        <p>La suppression du compte et des données associées peut être demandée à tout moment — voir la <a href="privacy.html">politique de confidentialité</a>.</p>
       </div>
-      <div class="landing-faq-item">
-        <h3>Comment supprimer mon compte ?</h3>
-        <p>Tu peux demander la suppression de ton compte et de tes données à tout moment — voir la section correspondante de notre politique de confidentialité.</p>
-      </div>
-      <div class="landing-faq-item">
-        <h3>Comment contacter l'équipe ?</h3>
-        <p>Les coordonnées de contact sont indiquées dans notre <a href="privacy.html">politique de confidentialité</a>.</p>
-      </div>
-    </section>
-
-    <section class="landing-section">
-      <h2>Confidentialité</h2>
-      <p class="landing-privacy-text">
-        Piquant ne vend jamais tes données et ne les utilise pas à des fins publicitaires.
-        Ton historique de conversation reste privé et lié à ton compte.
-        <a href="privacy.html">Lire la politique de confidentialité complète</a>.
-      </p>
     </section>
 
     <footer class="landing-footer">
       <div class="landing-footer-brand">Piquant IA</div>
       <nav class="landing-footer-links">
-        <a href="privacy.html">Politique de confidentialité</a>
+        <a href="about.html">À propos</a>
+        <a href="contact.html">Contact</a>
         <a href="terms.html">Conditions d'utilisation</a>
+        <a href="privacy.html">Politique de confidentialité</a>
       </nav>
-      <div class="landing-footer-credit">Créé par Rahim Batchabi</div>
+      <div class="landing-footer-credit">© 2026 Piquant IA</div>
     </footer>
 
   </div>
@@ -1343,10 +1332,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   document.getElementById('landingTryBtn').addEventListener('click', function () {
     guestBtn.click(); // réutilise exactement la même logique que "Utiliser sans compte"
   });
-  document.getElementById('landingSignupBtn').addEventListener('click', function () {
-    showAuthDirectly = true;
-    setMode('signup');
-    revealNextScreen();
+  document.getElementById('landingGuestBtn2').addEventListener('click', function () {
+    guestBtn.click();
+  });
+  document.getElementById('landingHeaderTryBtn').addEventListener('click', function () {
+    guestBtn.click();
   });
   document.getElementById('landingLoginBtn').addEventListener('click', function () {
     showAuthDirectly = true;

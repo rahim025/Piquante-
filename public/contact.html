@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact — Piquant IA</title>
+<meta name="description" content="Contacter l'équipe de Piquant IA." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://piquant-ia.onrender.com/contact.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="logo.svg" />
+<style>
+  :root{
+    --moss-950:#0b0f0a; --moss-900:#1b2420; --moss-700:#3a4a3d;
+    --sage:#7c9473; --parchment:#ede7d9; --parchment-dim:#a9a294;
+    --amber:#c97b4a; --amber-bright:#e69a5f; --gold:#f2c879;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; background:var(--moss-950); color:var(--parchment); font-family:'Inter',sans-serif;}
+  .wrap{max-width:560px; margin:0 auto; padding:36px 22px 80px;}
+  .top a{color:var(--sage); text-decoration:none; font-size:0.85rem;}
+  .top a:hover{color:var(--amber-bright);}
+  h1{font-family:'Fraunces',serif; font-weight:700; font-size:1.9rem; margin:18px 0 10px;}
+  p{line-height:1.65; font-size:0.95rem; color:var(--parchment-dim);}
+  a{color:var(--amber-bright);}
+  form{margin-top:26px; display:flex; flex-direction:column; gap:16px;}
+  label{font-size:0.82rem; color:var(--sage); margin-bottom:6px; display:block;}
+  input, textarea{
+    width:100%; background:var(--moss-900); border:1px solid var(--moss-700); border-radius:10px;
+    padding:12px 14px; color:var(--parchment); font-family:'Inter',sans-serif; font-size:0.92rem;
+  }
+  textarea{min-height:130px; resize:vertical;}
+  input:focus, textarea:focus{outline:none; border-color:var(--amber-bright);}
+  button{
+    background: linear-gradient(135deg, #c9531c, #f4a259); color:#1a1109; border:none;
+    padding:13px 0; border-radius:100px; font-weight:700; font-size:0.95rem; cursor:pointer;
+  }
+  button:hover{ filter:brightness(1.06); }
+  button:disabled{ opacity:0.6; cursor:not-allowed; }
+  .status{ font-size:0.88rem; margin-top:6px; min-height:20px; }
+  .status.ok{ color:#8fbf7f; }
+  .status.err{ color:#e08a6b; }
+  .alt-contact{ margin-top:34px; padding-top:20px; border-top:1px solid var(--moss-700); font-size:0.85rem; color:var(--parchment-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="index.html">← Retour à Piquant</a></div>
+  <h1>Contact</h1>
+  <p>Une question, un problème, une suggestion ? Écris-nous ci-dessous.</p>
+
+  <form id="contactForm">
+    <div>
+      <label for="cName">Nom</label>
+      <input type="text" id="cName" required maxlength="80" autocomplete="name" />
+    </div>
+    <div>
+      <label for="cEmail">Email</label>
+      <input type="email" id="cEmail" required autocomplete="email" />
+    </div>
+    <div>
+      <label for="cMessage">Message</label>
+      <textarea id="cMessage" required maxlength="2000"></textarea>
+    </div>
+    <button type="submit" id="cSubmit">Envoyer</button>
+    <div class="status" id="cStatus"></div>
+  </form>
+
+  <div class="alt-contact">
+    Tu peux aussi nous contacter directement — voir les coordonnées indiquées dans notre
+    <a href="privacy.html">politique de confidentialité</a>.
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqebrmq9y1xjq9Iz8MibVEgB7Zc9BgEpA",
+    authDomain: "piquant-c3d8c.firebaseapp.com",
+    projectId: "piquant-c3d8c",
+    storageBucket: "piquant-c3d8c.firebasestorage.app",
+    messagingSenderId: "150724464260",
+    appId: "1:150724464260:web:0e4c66ce3fb19189013cd1"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const form = document.getElementById('contactForm');
+  const statusEl = document.getElementById('cStatus');
+  const submitBtn = document.getElementById('cSubmit');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    statusEl.className = 'status';
+    statusEl.textContent = 'Envoi en cours...';
+
+    db.collection('contactMessages').add({
+      name: document.getElementById('cName').value.trim(),
+      email: document.getElementById('cEmail').value.trim(),
+      message: document.getElementById('cMessage').value.trim(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      statusEl.className = 'status ok';
+      statusEl.textContent = 'Message envoyé. Merci, on te répond au plus vite !';
+      form.reset();
+    }).catch(function () {
+      statusEl.className = 'status err';
+      statusEl.textContent = "Une erreur est survenue. Réessaie, ou écris-nous directement par e-mail (voir la politique de confidentialité).";
+    }).finally(function () {
+      submitBtn.disabled = false;
+    });
+  });
+</script>
+</body>
+</html>

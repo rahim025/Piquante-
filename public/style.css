@@ -2265,7 +2265,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 20px 0;
+  flex-wrap: wrap;
 }
 .landing-brand {
   display: flex;
@@ -2277,6 +2279,23 @@ body {
   color: #ede7d9;
 }
 .landing-brand img { border-radius: 7px; display: block; }
+.landing-nav-links {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.landing-nav-links a {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #a9a294;
+  text-decoration: none;
+}
+.landing-nav-links a:hover { color: #e69a5f; }
+.landing-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .landing-nav-login {
   background: none;
   border: 1px solid rgba(233,193,154,0.28);
@@ -2288,6 +2307,52 @@ body {
   cursor: pointer;
 }
 .landing-nav-login:hover { border-color: #e69a5f; color: #e69a5f; }
+.landing-nav-try {
+  background: linear-gradient(135deg, #c9531c, #f4a259);
+  color: #1a1109;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+.landing-nav-try:hover { filter: brightness(1.07); }
+
+.landing-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.landing-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  color: #ede7d9;
+  background: #1b2420;
+  border: 1px solid rgba(58,74,61,0.7);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.landing-step-num {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c9531c, #f4a259);
+  color: #1a1109;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .landing-hero {
   text-align: center;
@@ -2481,6 +2546,7 @@ body {
 }
 
 @media (max-width: 480px) {
+  .landing-nav-links { display: none; }
   .landing-hero { padding: 34px 0 24px; }
   .landing-cta-row { flex-direction: column; }
   .landing-cta { width: 100%; }
