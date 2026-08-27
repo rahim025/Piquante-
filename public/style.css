@@ -2160,12 +2160,13 @@ body {
   }
   .community-tab.active { color: #f4a259; border-bottom-color: #f4a259; }
 
-  .community-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative; }
-  .community-view { flex: 1; overflow: hidden; display: none; flex-direction: column; }
+  .community-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative; min-height: 0; }
+  .community-view { flex: 1; overflow: hidden; display: none; flex-direction: column; min-height: 0; }
   .community-view.active { display: flex; }
 
   .chat-messages {
-    flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+    flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
   }
   .chat-msg { max-width: 78%; font-family: 'Inter', sans-serif; font-size: 0.88rem; line-height: 1.4; word-wrap: break-word; display: flex; align-items: flex-end; gap: 8px; }
   .chat-msg.mine { align-self: flex-end; }
