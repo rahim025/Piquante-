@@ -1701,7 +1701,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
     userListEl.querySelectorAll('.user-list-item').forEach(function (el) {
       el.addEventListener('click', function () {
-        openPrivateThread(el.getAttribute('data-uid'), usersCache[el.getAttribute('data-uid')].name);
+        openPrivateThread(el.getAttribute('data-uid'), usersCache[el.getAttribute('data-uid')].name, usersCache[el.getAttribute('data-uid')].photoURL);
       });
     });
   }
@@ -1729,7 +1729,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     const actionHtml = mine
       ? `<button class="chat-msg-action" data-action="delete" data-id="${doc.id}">Supprimer</button>`
       : `<button class="chat-msg-action" data-action="report" data-id="${doc.id}" data-uid="${m.uid}">Signaler</button>`;
-    div.innerHTML = `${!mine ? `<div class="chat-msg-author">${escapeHtml(m.name)}</div>` : ''}${escapeHtml(m.text)}<div class="chat-msg-time">${formatTime(m.timestamp)} ${actionHtml}</div>`;
+    const authorPhoto = usersCache[m.uid] && usersCache[m.uid].photoURL;
+    const avatarHtml = !mine
+      ? `<span class="chat-msg-avatar"${authorPhoto ? ` style="background-image:url('${authorPhoto}');background-size:cover;background-position:center;"` : ''}>${authorPhoto ? '' : avatarLetter(m.name)}</span>`
+      : '';
+    div.innerHTML = `${avatarHtml}<div class="chat-msg-body">${!mine ? `<div class="chat-msg-author">${escapeHtml(m.name)}</div>` : ''}${escapeHtml(m.text)}<div class="chat-msg-time">${formatTime(m.timestamp)} ${actionHtml}</div></div>`;
     return div;
   }
 
@@ -1796,9 +1800,17 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const threadAvatarEl = document.getElementById('threadAvatar');
   const threadNameEl = document.getElementById('threadName');
 
-  function openPrivateThread(uid, name) {
+  function openPrivateThread(uid, name, photoURL) {
     currentThreadUid = uid;
-    threadAvatarEl.textContent = avatarLetter(name);
+    if (photoURL) {
+      threadAvatarEl.style.backgroundImage = `url(${photoURL})`;
+      threadAvatarEl.style.backgroundSize = 'cover';
+      threadAvatarEl.style.backgroundPosition = 'center';
+      threadAvatarEl.textContent = '';
+    } else {
+      threadAvatarEl.style.backgroundImage = '';
+      threadAvatarEl.textContent = avatarLetter(name);
+    }
     threadNameEl.textContent = name;
     document.getElementById('threadModMenu').classList.add('hidden');
     const reportBtn = document.getElementById('reportUserBtn');
