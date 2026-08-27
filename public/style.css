@@ -900,6 +900,20 @@ body {
     border-top: 1px solid rgba(233, 193, 154, 0.1);
     margin-top: 8px;
   }
+  .sidebar-profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: none;
+    padding: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .sidebar-profile-trigger:hover { background: rgba(233,193,154,0.06); }
   .sidebar-avatar {
     width: 30px;
     height: 30px;
@@ -913,7 +927,7 @@ body {
     font-weight: 600;
     flex-shrink: 0;
   }
-  .sidebar-footer span { color: #d8c3a8; font-size: 0.9rem; font-family: 'Inter', sans-serif; }
+  .sidebar-footer span { color: #d8c3a8; font-size: 0.9rem; font-family: 'Inter', sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   @media (max-width: 640px) {
     .header-newconv-label { display: none; }
@@ -2626,3 +2640,125 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #landingScreen * { animation: none !important; transition: none !important; }
 }
+
+/* ============================================================
+   PANNEAU PROFIL — modifier nom/photo, supprimer le compte
+   ============================================================ */
+
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.profile-overlay.hidden { display: none; }
+
+.profile-panel {
+  width: 100%;
+  max-width: 380px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #1b2420;
+  border: 1px solid rgba(233,193,154,0.18);
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.profile-header h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #ede7d9;
+  margin: 0;
+}
+.profile-close {
+  background: none;
+  border: none;
+  color: #a9a294;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 8px;
+}
+.profile-close:hover { color: #e69a5f; }
+
+.profile-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.profile-photo-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #c9531c;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.profile-photo-upload {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #e9c19a;
+  border: 1px solid rgba(233,193,154,0.25);
+  border-radius: 100px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.profile-photo-upload:hover { border-color: #e69a5f; color: #e69a5f; }
+
+.profile-status {
+  font-size: 0.85rem;
+  margin-top: 10px;
+  min-height: 18px;
+}
+.profile-status.ok { color: #8fbf7f; }
+.profile-status.err { color: #e08a6b; }
+
+.profile-danger-zone {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(233,193,154,0.12);
+}
+.profile-danger-zone h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #e08a6b;
+  margin: 0 0 6px;
+}
+.profile-danger-zone p {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #a9a294;
+  margin: 0 0 12px;
+}
+.profile-delete-btn {
+  width: 100%;
+  background: none;
+  border: 1px solid rgba(224,138,107,0.4);
+  color: #e08a6b;
+  padding: 11px 0;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.profile-delete-btn:hover { background: rgba(224,138,107,0.1); }
+.profile-delete-btn:disabled { opacity: 0.6; cursor: not-allowed; }

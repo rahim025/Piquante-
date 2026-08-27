@@ -52,6 +52,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -141,7 +142,7 @@
             <line x1="42" y1="16" x2="35" y2="21"/>
           </g>
           <circle class="brand-logo-body" cx="24" cy="27" r="10" fill="#c97b4a"/>
-          <circle cx="20" cy="25" r="1.6" fill="#0b0f0a"/>
+          <circle cx="20" cy="25" r="1.6" fill="#000000"/>
         </svg>
         Piquant IA
       </div>
@@ -519,11 +520,45 @@
   </div>
 
   <div class="sidebar-footer">
-    <span class="sidebar-avatar" id="sidebarAvatar">R</span>
-    <span id="sidebarUserName">Rahim Batchabi</span>
+    <button class="sidebar-profile-trigger" id="sidebarProfileTrigger" type="button">
+      <span class="sidebar-avatar" id="sidebarAvatar">R</span>
+      <span id="sidebarUserName">Rahim Batchabi</span>
+    </button>
     <button class="sidebar-logout" id="logoutBtn">Déconnexion</button>
   </div>
 </aside>
+
+<!-- Panneau Profil : modifier nom/photo, supprimer le compte -->
+<div id="profileOverlay" class="profile-overlay hidden">
+  <div class="profile-panel">
+    <div class="profile-header">
+      <h2>Ton profil</h2>
+      <button type="button" id="profileCloseBtn" class="profile-close" aria-label="Fermer">&times;</button>
+    </div>
+
+    <div class="profile-photo-row">
+      <span class="profile-photo-preview" id="profilePhotoPreview">R</span>
+      <label class="profile-photo-upload">
+        Changer la photo
+        <input type="file" id="profilePhotoInput" accept="image/*" hidden />
+      </label>
+    </div>
+
+    <div class="form-field">
+      <input type="text" id="profileNameInput" placeholder=" " maxlength="60" />
+      <label>Nom affiché</label>
+    </div>
+
+    <button type="button" id="profileSaveBtn" class="auth-submit">Enregistrer</button>
+    <div class="profile-status" id="profileStatus"></div>
+
+    <div class="profile-danger-zone">
+      <h3>Zone dangereuse</h3>
+      <p>Supprimer ton compte efface définitivement ton profil et tes données associées. Cette action est irréversible.</p>
+      <button type="button" id="deleteAccountBtn" class="profile-delete-btn">Supprimer mon compte</button>
+    </div>
+  </div>
+</div>
 
 <div class="app app-hidden" id="appRoot">
 
@@ -1030,6 +1065,15 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   const sidebarUserName = document.getElementById('sidebarUserName');
   const logoutBtn = document.getElementById('logoutBtn');
+  const sidebarProfileTrigger = document.getElementById('sidebarProfileTrigger');
+  const profileOverlay = document.getElementById('profileOverlay');
+  const profileCloseBtn = document.getElementById('profileCloseBtn');
+  const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+  const profilePhotoInput = document.getElementById('profilePhotoInput');
+  const profileNameInput = document.getElementById('profileNameInput');
+  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  const profileStatus = document.getElementById('profileStatus');
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
   const configWarning = document.getElementById('configWarning');
   const guestBtn = document.getElementById('guestBtn');
   const googleSignInBtn = document.getElementById('googleSignInBtn');
@@ -1306,6 +1350,124 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       })
       .catch((err) => showError(friendlyError(err.code)))
       .finally(() => { btn.disabled = false; });
+  });
+
+  // --- Panneau Profil ---
+  function openProfilePanel() {
+    if (!isLoggedIn || !auth.currentUser) return; // profil réservé aux comptes connectés
+    const user = auth.currentUser;
+    profileNameInput.value = user.displayName || '';
+    if (user.photoURL) {
+      profilePhotoPreview.style.backgroundImage = `url(${user.photoURL})`;
+      profilePhotoPreview.style.backgroundSize = 'cover';
+      profilePhotoPreview.style.backgroundPosition = 'center';
+      profilePhotoPreview.textContent = '';
+    } else {
+      profilePhotoPreview.style.backgroundImage = '';
+      profilePhotoPreview.textContent = (user.displayName || 'U').trim().charAt(0).toUpperCase();
+    }
+    profileStatus.textContent = '';
+    profileStatus.className = 'profile-status';
+    profileOverlay.classList.remove('hidden');
+  }
+  function closeProfilePanel() {
+    profileOverlay.classList.add('hidden');
+  }
+  sidebarProfileTrigger.addEventListener('click', openProfilePanel);
+  profileCloseBtn.addEventListener('click', closeProfilePanel);
+  profileOverlay.addEventListener('click', function (e) {
+    if (e.target === profileOverlay) closeProfilePanel();
+  });
+
+  let pendingPhotoFile = null;
+  profilePhotoInput.addEventListener('change', function () {
+    const file = profilePhotoInput.files && profilePhotoInput.files[0];
+    if (!file) return;
+    pendingPhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      profilePhotoPreview.style.backgroundImage = `url(${e.target.result})`;
+      profilePhotoPreview.style.backgroundSize = 'cover';
+      profilePhotoPreview.style.backgroundPosition = 'center';
+      profilePhotoPreview.textContent = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  profileSaveBtn.addEventListener('click', function () {
+    const user = auth.currentUser;
+    if (!user) return;
+    profileSaveBtn.disabled = true;
+    profileStatus.className = 'profile-status';
+    profileStatus.textContent = 'Enregistrement...';
+
+    const newName = profileNameInput.value.trim() || user.displayName || 'Utilisateur';
+
+    let uploadStep = Promise.resolve(user.photoURL || null);
+    if (pendingPhotoFile) {
+      const ref = firebase.storage().ref().child(`profile-photos/${user.uid}`);
+      uploadStep = ref.put(pendingPhotoFile).then(() => ref.getDownloadURL());
+    }
+
+    uploadStep
+      .then((photoURL) => user.updateProfile({ displayName: newName, photoURL: photoURL || null }))
+      .then(() => firebase.firestore().collection('users').doc(user.uid).set({
+        firstName: newName.split(' ')[0] || newName,
+        lastName: newName.split(' ').slice(1).join(' '),
+      }, { merge: true }))
+      .then(() => {
+        pendingPhotoFile = null;
+        sidebarUserName.textContent = newName;
+        if (user.photoURL) {
+          sidebarAvatar.style.backgroundImage = `url(${user.photoURL})`;
+          sidebarAvatar.style.backgroundSize = 'cover';
+          sidebarAvatar.style.backgroundPosition = 'center';
+          sidebarAvatar.textContent = '';
+        } else {
+          sidebarAvatar.textContent = newName.trim().charAt(0).toUpperCase();
+        }
+        profileStatus.className = 'profile-status ok';
+        profileStatus.textContent = 'Profil mis à jour !';
+      })
+      .catch((err) => {
+        console.error('Erreur mise à jour profil:', err);
+        profileStatus.className = 'profile-status err';
+        profileStatus.textContent = "Impossible d'enregistrer. Réessaie.";
+      })
+      .finally(() => { profileSaveBtn.disabled = false; });
+  });
+
+  deleteAccountBtn.addEventListener('click', function () {
+    const user = auth.currentUser;
+    if (!user) return;
+    const confirmed = window.confirm(
+      "Supprimer définitivement ton compte et tes données ? Cette action est irréversible."
+    );
+    if (!confirmed) return;
+
+    deleteAccountBtn.disabled = true;
+    profileStatus.className = 'profile-status';
+    profileStatus.textContent = 'Suppression en cours...';
+
+    firebase.firestore().collection('users').doc(user.uid).delete()
+      .catch(() => {}) // on continue même si cette étape échoue
+      .then(() => user.delete())
+      .then(() => {
+        closeProfilePanel();
+        guestMode = false;
+        localStorage.removeItem('piquant_guest_mode');
+      })
+      .catch((err) => {
+        if (err.code === 'auth/requires-recent-login') {
+          profileStatus.className = 'profile-status err';
+          profileStatus.textContent = "Pour ta sécurité, reconnecte-toi (déconnexion puis reconnexion) avant de supprimer ton compte.";
+        } else {
+          console.error('Erreur suppression compte:', err);
+          profileStatus.className = 'profile-status err';
+          profileStatus.textContent = "Impossible de supprimer le compte. Réessaie.";
+        }
+      })
+      .finally(() => { deleteAccountBtn.disabled = false; });
   });
 
   // --- Déconnexion ---

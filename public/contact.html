@@ -77,6 +77,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyBqebrmq9y1xjq9Iz8MibVEgB7Zc9BgEpA",
@@ -89,6 +90,18 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // --- Notification par e-mail via EmailJS (gratuit, sans serveur) ---
+  // Pour activer les notifications réelles : crée un compte gratuit sur
+  // https://www.emailjs.com, ajoute un service (Gmail par ex.), crée un
+  // modèle d'e-mail, puis remplace les 3 valeurs ci-dessous.
+  const EMAILJS_PUBLIC_KEY = "W88kanujQe-SeoSxD2f4r";
+  const EMAILJS_SERVICE_ID = "service_4fjuu4f";
+  const EMAILJS_TEMPLATE_ID = "template_uyxzcpn";
+  const emailNotifsConfigured = ![EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID].includes("REMPLACEZ_MOI");
+  if (emailNotifsConfigured && window.emailjs) {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
+
   const form = document.getElementById('contactForm');
   const statusEl = document.getElementById('cStatus');
   const submitBtn = document.getElementById('cSubmit');
@@ -99,12 +112,24 @@
     statusEl.className = 'status';
     statusEl.textContent = 'Envoi en cours...';
 
-    db.collection('contactMessages').add({
+    const payload = {
       name: document.getElementById('cName').value.trim(),
       email: document.getElementById('cEmail').value.trim(),
       message: document.getElementById('cMessage').value.trim(),
+    };
+
+    // Toujours enregistré dans Firestore (consultable dans la console Firebase),
+    // et en plus envoyé par e-mail en temps réel si EmailJS est configuré.
+    const savePromise = db.collection('contactMessages').add({
+      ...payload,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function () {
+    });
+
+    const notifyPromise = emailNotifsConfigured
+      ? emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, payload)
+      : Promise.resolve();
+
+    Promise.all([savePromise, notifyPromise]).then(function () {
       statusEl.className = 'status ok';
       statusEl.textContent = 'Message envoyé. Merci, on te répond au plus vite !';
       form.reset();

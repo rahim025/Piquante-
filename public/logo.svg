@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bodyGrad" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#e69a5f"/>
+      <stop offset="100%" stop-color="#c97b4a"/>
+    </radialGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b2420"/>
+      <stop offset="100%" stop-color="#10160f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="200" height="200" rx="44" fill="url(#bgGrad)"/>
+
+  <!-- radiating spikes -->
+  <g stroke="#f2c879" stroke-width="6" stroke-linecap="round">
+    <line x1="100" y1="26" x2="88" y2="62"/>
+    <line x1="100" y1="26" x2="112" y2="62"/>
+    <line x1="62" y1="34" x2="74" y2="66"/>
+    <line x1="138" y1="34" x2="126" y2="66"/>
+    <line x1="34" y1="58" x2="52" y2="80"/>
+    <line x1="166" y1="58" x2="148" y2="80"/>
+    <line x1="24" y1="92" x2="46" y2="98"/>
+    <line x1="176" y1="92" x2="154" y2="98"/>
+  </g>
+
+  <!-- body -->
+  <circle cx="100" cy="116" r="46" fill="url(#bodyGrad)"/>
+
+  <!-- snout -->
+  <ellipse cx="70" cy="122" rx="14" ry="10" fill="#e69a5f"/>
+  <circle cx="60" cy="122" r="4" fill="#000000"/>
+
+  <!-- eye -->
+  <circle cx="86" cy="108" r="6" fill="#000000"/>
+  <circle cx="88" cy="106" r="1.8" fill="#ede7d9"/>
+</svg>
