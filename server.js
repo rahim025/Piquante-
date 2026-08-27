@@ -58,6 +58,27 @@ const GROQ_MODEL = "openai/gpt-oss-20b";
 // est indisponible ou si sa limite gratuite est atteinte.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
+const MUSIC_MODEL = "lyria-3-clip-preview";
+const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
+
+// --- Musique et vidéo : fonctionnalités payantes (coût réel à chaque
+// génération), réservées aux comptes connectés, avec un quota quotidien
+// strict pour éviter une facture qui s'emballe en cas d'abus. ---
+const dailyUsage = new Map(); // uid -> { date: "YYYY-MM-DD", music: n, video: n }
+const MUSIC_DAILY_LIMIT = 5;
+const VIDEO_DAILY_LIMIT = 2;
+
+function checkAndConsumeQuota(uid, kind, limit) {
+  const today = new Date().toISOString().slice(0, 10);
+  let usage = dailyUsage.get(uid);
+  if (!usage || usage.date !== today) {
+    usage = { date: today, music: 0, video: 0 };
+  }
+  if (usage[kind] >= limit) return false;
+  usage[kind]++;
+  dailyUsage.set(uid, usage);
+  return true;
+}
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 // ---------- Base de données (historique des conversations) ----------
@@ -192,8 +213,21 @@ function detectIntent(message) {
     "montre-moi une image", "montre moi une image", "affiche une image",
   ];
   const pinterestKeywords = ["pinterest"];
+  const musicKeywords = [
+    "génère une musique", "genere une musique", "crée une musique", "cree une musique",
+    "génère une chanson", "genere une chanson", "crée une chanson", "cree une chanson",
+    "fais une musique", "fais-moi une musique", "compose une musique", "compose-moi",
+    "fais une chanson", "fais-moi une chanson",
+  ];
+  const videoKeywords = [
+    "génère une vidéo", "genere une video", "crée une vidéo", "cree une video",
+    "fais une vidéo", "fais-moi une vidéo", "fais une video", "fais-moi une video",
+    "génère-moi une vidéo", "genere moi une video",
+  ];
   if (pinterestKeywords.some((k) => lower.includes(k))) return "pinterest";
   if (pdfKeywords.some((k) => lower.includes(k))) return "pdf";
+  if (videoKeywords.some((k) => lower.includes(k))) return "video";
+  if (musicKeywords.some((k) => lower.includes(k))) return "music";
   if (imageKeywords.some((k) => lower.includes(k))) return "image";
   return "text";
 }
@@ -263,6 +297,33 @@ const FEATURES = [
     ],
   },
   {
+    icon: "🎵",
+    title: "Générer une musique",
+    description: "Décris une ambiance ou un style, Piquant compose un clip musical de 30 secondes. Réservé aux comptes connectés (5 par jour).",
+    examples: [
+      "Génère une musique calme au piano",
+      "Compose-moi une chanson entraînante pour un anniversaire",
+    ],
+  },
+  {
+    icon: "🎬",
+    title: "Générer une vidéo",
+    description: "Décris une scène, Piquant génère une courte vidéo (peut prendre 30 à 90 secondes). Réservé aux comptes connectés (2 par jour).",
+    examples: [
+      "Génère une vidéo d'un lever de soleil sur l'océan",
+      "Fais-moi une vidéo d'un chat qui joue dans la neige",
+    ],
+  },
+  {
+    icon: "🔧",
+    title: "Matières techniques",
+    description: "Piquant est solide en électrotechnique, mathématiques, français, anglais, technologie et EST — utile pour réviser, comprendre un schéma électrique ou vérifier un exercice.",
+    examples: [
+      "Explique-moi la loi d'Ohm avec un exemple",
+      "Comment lire un schéma électrique de base ?",
+    ],
+  },
+  {
     icon: "🔈",
     title: "Écouter une réponse",
     description: "Clique sur l'icône haut-parleur sous n'importe quelle réponse de Piquant pour l'entendre à voix haute.",
@@ -272,6 +333,12 @@ const FEATURES = [
     icon: "🕒",
     title: "Historique des conversations",
     description: "Connecte-toi pour retrouver tes anciennes conversations à tout moment, et démarre une nouvelle discussion quand tu veux avec le bouton \"Nouvelle conversation\".",
+    examples: [],
+  },
+  {
+    icon: "👤",
+    title: "Profil et compte",
+    description: "Une fois connecté, clique sur ton nom dans la barre latérale pour changer ta photo, ton nom affiché, ou supprimer définitivement ton compte.",
     examples: [],
   },
 ];
@@ -353,6 +420,16 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
     }
     if (intent === "pdf") {
       return await handlePdfRequest(message, history, res, conversationId);
+    }
+    if (intent === "music" || intent === "video") {
+      const uid = req.body && req.body.uid;
+      if (!uid) {
+        return res.status(401).json({
+          error: "Connecte-toi à ton compte pour générer de la musique ou une vidéo (fonctionnalité réservée aux comptes, car elle a un coût réel).",
+        });
+      }
+      if (intent === "music") return await handleMusicRequest(message, history, res, conversationId, uid);
+      return await handleVideoRequest(message, history, res, conversationId, uid);
     }
     return await handleTextRequest(message, history, res, sid, conversationId, visitorId);
   } catch (err) {
@@ -445,12 +522,14 @@ async function handleTextRequest(message, history, res, sid, conversationId, vis
     `Tu es Piquant, un assistant IA au ton posé, direct et raffiné — pas robotique, pas bavard. ` +
     `Style : phrases courtes et précises, vocabulaire soigné sans être pompeux, jamais de flatterie ni de formules creuses ("excellente question", "je suis ravi de vous aider"). Va droit au fait dès la première phrase. ` +
     `Structure tes réponses avec des paragraphes courts ou des listes quand c'est utile, jamais pour faire joli. Si un sujet est incertain ou débattu, dis-le clairement plutôt que d'inventer une certitude. ` +
+    `Tu es solide dans toutes les matières de l'enseignement technique : électrotechnique (circuits, moteurs, schémas électriques, normes de câblage), mathématiques, français, anglais, technologie générale, et les matières type EST (Étude des Systèmes Techniques). ` +
+    `Pour l'électrotechnique et les schémas électriques : sois rigoureux sur les symboles normalisés, les unités (V, A, Ω, W), les lois de base (Ohm, Kirchhoff, puissance), et décris les schémas clairement étape par étape puisque tu ne peux pas dessiner de vrais schémas toi-même — utilise une description textuelle structurée (composants, connexions, valeurs) plutôt qu'un dessin ASCII approximatif. ` +
     `Réponds dans la langue du visiteur. Sois concis mais complet. ` +
     `Nous sommes aujourd'hui le ${todayLabel}, il est environ ${timeLabel} (heure du Bénin, UTC+1). Utilise cette date réelle si on te demande la date, l'heure ou le jour — ne l'invente jamais. ` +
     `Si on te demande qui t'a créé, qui est ton créateur/développeur, ou qui a fait ce site, réponds que c'est Rahim Batchabi. ` +
     `Si on te demande qui est l'actuel président du Bénin, réponds que c'est Romuald Wadagni, en fonction depuis le 24 mai 2026. ` +
     `Quand tu mentionnes un lien ou un site web, écris-le au format Markdown [texte du lien](https://url-complète.com) pour qu'il s'affiche cliquable. ` +
-    `Tu ne sais pas générer de vraies images toi-même dans le texte : si quelqu'un te demande un dessin, une image ou une photo, ne fais jamais de dessin en ASCII/texte à la place — dis-lui simplement de reformuler sa demande en commençant par "Dessine-moi..." ou "Génère une image de...".` +
+    `Tu ne sais pas générer de vraies images toi-même dans le texte : si quelqu'un te demande un dessin, une image ou une photo (y compris un schéma électrique dessiné), ne fais jamais de dessin en ASCII/texte à la place — dis-lui simplement de reformuler sa demande en commençant par "Dessine-moi..." ou "Génère une image de...".` +
     nameLine;
 
   const { response, data } = await callGroqWithRetry(historyToGroqMessages(history, systemText));
@@ -592,6 +671,121 @@ async function handleImageRequest(message, history, res, conversationId) {
     image: dataUrl,
     conversationId,
   });
+}
+
+async function handleMusicRequest(message, history, res, conversationId, uid) {
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: "La génération de musique n'est pas configurée sur le serveur." });
+  }
+  if (!checkAndConsumeQuota(uid, "music", MUSIC_DAILY_LIMIT)) {
+    return res.status(429).json({
+      error: `Limite quotidienne de musique atteinte (${MUSIC_DAILY_LIMIT}/jour). Réessaie demain.`,
+    });
+  }
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MUSIC_MODEL}:generateContent`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+      body: JSON.stringify({ contents: [{ parts: [{ text: message }] }] }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("Erreur Lyria:", data);
+      return res.status(502).json({ error: "Impossible de générer la musique pour le moment. Réessaie plus tard." });
+    }
+
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const audioPart = parts.find((p) => p.inlineData);
+    if (!audioPart) {
+      return res.status(502).json({ error: "Aucune musique n'a pu être générée pour cette demande." });
+    }
+    const audioDataUrl = `data:${audioPart.inlineData.mimeType || "audio/mpeg"};base64,${audioPart.inlineData.data}`;
+
+    history.push({ role: "user", parts: [{ text: message }] });
+    history.push({ role: "model", parts: [{ text: "[Musique générée]" }] });
+    while (history.length > MAX_TURNS * 2) history.shift();
+    await saveMessage(conversationId, "model", "[Musique générée]");
+
+    res.json({
+      type: "music",
+      reply: "Voici ta musique générée (clip de 30 secondes) :",
+      audio: audioDataUrl,
+      conversationId,
+    });
+  } catch (err) {
+    console.error("Erreur génération musique:", err);
+    res.status(502).json({ error: "Impossible de générer la musique pour le moment. Réessaie plus tard." });
+  }
+}
+
+async function handleVideoRequest(message, history, res, conversationId, uid) {
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: "La génération de vidéo n'est pas configurée sur le serveur." });
+  }
+  if (!checkAndConsumeQuota(uid, "video", VIDEO_DAILY_LIMIT)) {
+    return res.status(429).json({
+      error: `Limite quotidienne de vidéo atteinte (${VIDEO_DAILY_LIMIT}/jour). Réessaie demain.`,
+    });
+  }
+
+  try {
+    const startUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VIDEO_MODEL}:predictLongRunning`;
+    const startRes = await fetch(startUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+      body: JSON.stringify({ instances: [{ prompt: message }], parameters: { aspectRatio: "16:9" } }),
+    });
+    const startData = await startRes.json();
+    if (!startRes.ok || !startData.name) {
+      console.error("Erreur démarrage Veo:", startData);
+      return res.status(502).json({ error: "Impossible de démarrer la génération vidéo. Réessaie plus tard." });
+    }
+
+    const operationName = startData.name;
+    const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${operationName}`;
+    let done = false;
+    let videoUri = null;
+
+    // La génération vidéo prend du temps (souvent 30 à 90s) : on interroge
+    // l'opération à intervalles réguliers, avec un temps d'attente maximal.
+    for (let attempt = 0; attempt < 9 && !done; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      const statusRes = await fetch(pollUrl, { headers: { "x-goog-api-key": GEMINI_API_KEY } });
+      const statusData = await statusRes.json();
+      if (statusData.done) {
+        done = true;
+        videoUri = statusData?.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri || null;
+      }
+    }
+
+    if (!done || !videoUri) {
+      return res.status(504).json({
+        error: "La génération vidéo prend plus de temps que prévu. Réessaie avec une description plus simple.",
+      });
+    }
+
+    // On télécharge la vidéo et on la renvoie en base64 pour l'afficher directement.
+    const videoRes = await fetch(videoUri, { headers: { "x-goog-api-key": GEMINI_API_KEY } });
+    const videoBuffer = Buffer.from(await videoRes.arrayBuffer());
+    const videoDataUrl = `data:video/mp4;base64,${videoBuffer.toString("base64")}`;
+
+    history.push({ role: "user", parts: [{ text: message }] });
+    history.push({ role: "model", parts: [{ text: "[Vidéo générée]" }] });
+    while (history.length > MAX_TURNS * 2) history.shift();
+    await saveMessage(conversationId, "model", "[Vidéo générée]");
+
+    res.json({
+      type: "video",
+      reply: "Voici ta vidéo générée :",
+      video: videoDataUrl,
+      conversationId,
+    });
+  } catch (err) {
+    console.error("Erreur génération vidéo:", err);
+    res.status(502).json({ error: "Impossible de générer la vidéo pour le moment. Réessaie plus tard." });
+  }
 }
 
 async function handlePdfRequest(message, history, res, conversationId) {
