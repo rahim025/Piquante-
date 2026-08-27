@@ -118,6 +118,12 @@
   </div>
   <div class="splash-title">Piquant</div>
   <div class="splash-bar"></div>
+  <div class="splash-perks">
+    <span class="splash-perk">Rapidité</span>
+    <span class="splash-perk">Simplicité</span>
+    <span class="splash-perk">Réponses directes</span>
+    <span class="splash-perk">Accessibilité</span>
+  </div>
 </div>
 
 <div id="landingScreen">
@@ -1321,7 +1327,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   // d'appeler revealNextScreen() — ça évite que deux bouts de code se
   // marchent dessus et laissent l'écran de connexion collé par-dessus l'appli.
   let splashMinTimeElapsed = false;
-  setTimeout(() => { splashMinTimeElapsed = true; revealNextScreen(); }, 1300);
+  setTimeout(() => { splashMinTimeElapsed = true; revealNextScreen(); }, 4000);
 
   const landingScreen = document.getElementById('landingScreen');
   let showAuthDirectly = false; // devient vrai quand on clique "Créer un compte" / "Se connecter" depuis la landing
