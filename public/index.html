@@ -1979,7 +1979,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
   // --- Installation en tant qu'application (PWA) ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch((err) => console.error('SW register error:', err));
     });
   }
   let deferredInstallPrompt = null;
@@ -1990,11 +1990,21 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     installBtn.classList.remove('hidden');
   });
   installBtn.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    installBtn.classList.add('hidden');
+    if (!deferredInstallPrompt) {
+      alert("L'installation automatique n'est pas disponible ici. Ouvre le menu ⋮ de Chrome (en haut à droite) puis choisis \"Installer l'application\" ou \"Ajouter à l'écran d'accueil\".");
+      return;
+    }
+    try {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      console.log('Choix installation :', choice.outcome);
+    } catch (err) {
+      console.error('Erreur installation PWA:', err);
+      alert("L'installation a échoué. Essaie plutôt : menu ⋮ de Chrome → \"Installer l'application\".");
+    } finally {
+      deferredInstallPrompt = null;
+      installBtn.classList.add('hidden');
+    }
   });
   window.addEventListener('appinstalled', () => {
     installBtn.classList.add('hidden');
