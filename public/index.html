@@ -32,6 +32,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="logo.svg" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0b0f0a" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Piquant" />
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8851135637035384" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="style.css" />
 <script type="application/ld+json">
 {
@@ -152,6 +160,7 @@
         <a href="about.html">À propos</a>
         <a href="contact.html">Contact</a>
       </nav>
+      <button type="button" id="installAppBtn" class="landing-nav-login hidden">📲 Installer</button>
       <button type="button" id="landingNavLoginBtn" class="landing-nav-login">Se connecter</button>
     </header>
 
@@ -243,6 +252,18 @@
         <p>La suppression du compte et des données associées peut être demandée à tout moment — voir la <a href="privacy.html">politique de confidentialité</a>.</p>
       </div>
     </section>
+
+    <!-- Emplacement publicitaire : remplace data-ad-slot par l'ID réel de ton
+         bloc d'annonce une fois créé dans le tableau de bord AdSense -->
+    <div class="ad-slot">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-8851135637035384"
+           data-ad-slot="0000000000"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
 
     <footer class="landing-footer">
       <div class="landing-footer-brand">Piquant IA</div>
@@ -1954,6 +1975,31 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 })();
 </script>
 
+<script>
+  // --- Installation en tant qu'application (PWA) ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+  let deferredInstallPrompt = null;
+  const installBtn = document.getElementById('installAppBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    installBtn.classList.remove('hidden');
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.classList.add('hidden');
+  });
+  window.addEventListener('appinstalled', () => {
+    installBtn.classList.add('hidden');
+  });
+</script>
 <script src="script.js"></script>
 </body>
 </html>
