@@ -152,19 +152,16 @@
         <a href="about.html">À propos</a>
         <a href="contact.html">Contact</a>
       </nav>
-      <div class="landing-nav-buttons">
-        <button type="button" id="landingLoginBtn" class="landing-nav-login">Se connecter</button>
-        <button type="button" id="landingSignupNavBtn" class="landing-nav-login">Créer un compte</button>
-        <button type="button" id="landingHeaderTryBtn" class="landing-nav-try">Essayer gratuitement</button>
-      </div>
+      <button type="button" id="landingNavLoginBtn" class="landing-nav-login">Se connecter</button>
     </header>
 
     <section class="landing-hero" id="landingTop">
       <h1>Piquant IA — L'IA qui va droit au but.</h1>
       <p class="landing-hero-desc">Pose ta question. Obtiens une réponse claire. Passe à l'action.</p>
       <div class="landing-cta-row">
-        <button type="button" id="landingTryBtn" class="landing-cta primary">Essayer gratuitement</button>
-        <button type="button" id="landingGuestBtn2" class="landing-cta secondary">Utiliser sans compte</button>
+        <button type="button" id="landingLoginBtn" class="landing-cta secondary">Se connecter</button>
+        <button type="button" id="landingSignupNavBtn" class="landing-cta secondary">Créer un compte</button>
+        <button type="button" id="landingGuestBtn2" class="landing-cta primary">Utiliser sans compte</button>
       </div>
     </section>
 
@@ -1520,16 +1517,15 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
     }
   }
 
-  document.getElementById('landingTryBtn').addEventListener('click', function () {
+  document.getElementById('landingGuestBtn2').addEventListener('click', function () {
     guestBtn.click(); // réutilise exactement la même logique que "Utiliser sans compte"
   });
-  document.getElementById('landingGuestBtn2').addEventListener('click', function () {
-    guestBtn.click();
-  });
-  document.getElementById('landingHeaderTryBtn').addEventListener('click', function () {
-    guestBtn.click();
-  });
   document.getElementById('landingLoginBtn').addEventListener('click', function () {
+    showAuthDirectly = true;
+    setMode('login');
+    revealNextScreen();
+  });
+  document.getElementById('landingNavLoginBtn').addEventListener('click', function () {
     showAuthDirectly = true;
     setMode('login');
     revealNextScreen();
