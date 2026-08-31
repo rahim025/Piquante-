@@ -60,7 +60,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -1421,13 +1420,16 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
 
     const newName = profileNameInput.value.trim() || user.displayName || 'Utilisateur';
 
-    let uploadStep = Promise.resolve(user.photoURL || null);
-    if (pendingPhotoFile) {
-      const ref = firebase.storage().ref().child(`profile-photos/${user.uid}`);
-      uploadStep = ref.put(pendingPhotoFile).then(() => ref.getDownloadURL());
-    }
-
-    uploadStep
+    // Tout est englobé dans une promesse dès le départ : si firebase.storage()
+    // échoue (ex. Storage non activé sur le projet Firebase), l'erreur est
+    // maintenant bien rattrapée par le .catch() plus bas au lieu de bloquer
+    // silencieusement le bouton sur "Enregistrement...".
+    Promise.resolve()
+      .then(() => {
+        if (!pendingPhotoFile) return user.photoURL || null;
+        const ref = firebase.storage().ref().child(`profile-photos/${user.uid}`);
+        return ref.put(pendingPhotoFile).then(() => ref.getDownloadURL());
+      })
       .then((photoURL) => user.updateProfile({ displayName: newName, photoURL: photoURL || null }))
       .then(() => firebase.firestore().collection('users').doc(user.uid).set({
         firstName: newName.split(' ')[0] || newName,
@@ -1450,7 +1452,11 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "REMPLACEZ_MOI";
       .catch((err) => {
         console.error('Erreur mise à jour profil:', err);
         profileStatus.className = 'profile-status err';
-        profileStatus.textContent = "Impossible d'enregistrer. Réessaie.";
+        if (err && (err.code === 'storage/unknown' || err.message?.includes('storage') || typeof firebase.storage !== 'function')) {
+          profileStatus.textContent = "La photo n'a pas pu être envoyée (Firebase Storage n'est peut-être pas activé sur le projet). Ton nom a quand même pu être enregistré si tu réessaies sans changer de photo.";
+        } else {
+          profileStatus.textContent = "Impossible d'enregistrer. Réessaie.";
+        }
       })
       .finally(() => { profileSaveBtn.disabled = false; });
   });
