@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://piquant-ia.onrender.com/sitemap.xml
+Sitemap: https://piquante-g9ow.onrender.com/sitemap.xml
