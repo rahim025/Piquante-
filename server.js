@@ -58,6 +58,7 @@ const GROQ_MODEL = "openai/gpt-oss-20b";
 // est indisponible ou si sa limite gratuite est atteinte.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
+const VISION_MODEL = "gemini-3.1-flash"; // comprend une photo envoyée par l'utilisateur (pas pour en générer)
 const MUSIC_MODEL = "lyria-3-clip-preview";
 const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
 
@@ -147,7 +148,7 @@ async function saveMessage(conversationId, role, content) {
   }
 }
 
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // In-memory conversation context per conversation id (accélère les échanges
@@ -390,36 +391,44 @@ app.delete("/api/conversations/:id", async (req, res) => {
 
 app.post("/api/chat", chatRateLimit, async (req, res) => {
   try {
-    const { message, visitorId } = req.body || {};
+    const { message, visitorId, image } = req.body || {};
     let { conversationId } = req.body || {};
-    if (!message || typeof message !== "string" || !message.trim()) {
+    const hasImage = typeof image === "string" && image.startsWith("data:image/");
+
+    if ((!message || typeof message !== "string" || !message.trim()) && !hasImage) {
       return res.status(400).json({ error: "Message vide." });
     }
-    if (message.length > 4000) {
+    if (message && message.length > 4000) {
       return res.status(400).json({ error: "Message trop long (4000 caractères maximum)." });
     }
 
-    conversationId = await ensureConversation(conversationId, visitorId, message);
+    const effectiveMessage = (message && message.trim()) || "Décris cette image et dis-moi ce qu'il y a d'intéressant à en dire.";
+
+    conversationId = await ensureConversation(conversationId, visitorId, effectiveMessage);
 
     const sid = conversationId;
     if (!sessions.has(sid)) sessions.set(sid, []);
     const history = sessions.get(sid);
 
-    const detectedName = extractNameFromMessage(message);
+    const detectedName = extractNameFromMessage(effectiveMessage);
     if (detectedName) setVisitorName(visitorId || sid, detectedName);
 
-    await saveMessage(conversationId, "user", message);
+    await saveMessage(conversationId, "user", hasImage ? `${effectiveMessage} [+ photo]` : effectiveMessage);
 
-    const intent = detectIntent(message);
+    if (hasImage) {
+      return await handleVisionRequest(effectiveMessage, image, history, res, conversationId);
+    }
+
+    const intent = detectIntent(effectiveMessage);
 
     if (intent === "pinterest") {
-      return await handlePinterestRequest(message, history, res, conversationId);
+      return await handlePinterestRequest(effectiveMessage, history, res, conversationId);
     }
     if (intent === "image") {
-      return await handleImageRequest(message, history, res, conversationId);
+      return await handleImageRequest(effectiveMessage, history, res, conversationId);
     }
     if (intent === "pdf") {
-      return await handlePdfRequest(message, history, res, conversationId);
+      return await handlePdfRequest(effectiveMessage, history, res, conversationId);
     }
     if (intent === "music" || intent === "video") {
       const uid = req.body && req.body.uid;
@@ -428,10 +437,10 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
           error: "Connecte-toi à ton compte pour générer de la musique ou une vidéo (fonctionnalité réservée aux comptes, car elle a un coût réel).",
         });
       }
-      if (intent === "music") return await handleMusicRequest(message, history, res, conversationId, uid);
-      return await handleVideoRequest(message, history, res, conversationId, uid);
+      if (intent === "music") return await handleMusicRequest(effectiveMessage, history, res, conversationId, uid);
+      return await handleVideoRequest(effectiveMessage, history, res, conversationId, uid);
     }
-    return await handleTextRequest(message, history, res, sid, conversationId, visitorId);
+    return await handleTextRequest(effectiveMessage, history, res, sid, conversationId, visitorId);
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Erreur interne du serveur." });
@@ -501,6 +510,56 @@ function historyToGroqMessages(history, systemText) {
     });
   }
   return messages;
+}
+
+async function handleVisionRequest(message, imageDataUrl, history, res, conversationId) {
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: "L'analyse d'image n'est pas configurée sur le serveur." });
+  }
+  try {
+    const match = imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!match) {
+      return res.status(400).json({ error: "Format d'image invalide." });
+    }
+    const [, mimeType, base64Data] = match;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${VISION_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: message }, { inlineData: { mimeType, data: base64Data } }],
+          },
+        ],
+        systemInstruction: {
+          parts: [{ text: "Tu es Piquant, un assistant IA au ton posé et direct. Décris et analyse la photo envoyée par le visiteur, réponds à sa question à son sujet si besoin. Réponds dans la langue du visiteur." }],
+        },
+        generationConfig: { maxOutputTokens: 800, temperature: 0.6 },
+      }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Erreur Gemini Vision:", data);
+      return res.status(502).json({ error: "Impossible d'analyser cette image pour le moment. Réessaie plus tard." });
+    }
+
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") ||
+      "Je n'ai pas réussi à analyser cette image.";
+
+    history.push({ role: "user", parts: [{ text: `${message} [+ photo]` }] });
+    history.push({ role: "model", parts: [{ text: reply }] });
+    await saveMessage(conversationId, "model", reply);
+
+    res.json({ type: "text", reply, conversationId });
+  } catch (err) {
+    console.error("Erreur analyse image:", err);
+    res.status(502).json({ error: "Impossible d'analyser cette image pour le moment. Réessaie plus tard." });
+  }
 }
 
 async function handleTextRequest(message, history, res, sid, conversationId, visitorId) {
