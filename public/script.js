@@ -5,6 +5,10 @@
   const input = document.getElementById("composerInput");
   const sendBtn = document.getElementById("sendBtn");
   const resetBtn = document.getElementById("resetBtn");
+  const attachBtn = document.getElementById("attachBtn");
+  const fileInput = document.getElementById("fileInput");
+  const filePreviewRow = document.getElementById("filePreviewRow");
+  const micBtn = document.getElementById("micBtn");
 
   const visitorId =
     localStorage.getItem("piquant_visitor") ||
@@ -14,8 +18,92 @@
       return id;
     })();
   let conversationId = null;
+  let pendingImage = null; // data URL base64 de la photo jointe, ou null
 
   let busy = false;
+
+  // --- Pièce jointe : photo envoyée à l'IA pour analyse ---
+  attachBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Pour l'instant, seules les photos peuvent être jointes.");
+      fileInput.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pendingImage = e.target.result;
+      filePreviewRow.style.display = "flex";
+      filePreviewRow.innerHTML = "";
+      const chip = document.createElement("div");
+      chip.className = "file-preview-chip";
+      const thumb = document.createElement("img");
+      thumb.src = pendingImage;
+      const name = document.createElement("span");
+      name.className = "fpc-name";
+      name.textContent = file.name;
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "fpc-remove";
+      removeBtn.textContent = "✕";
+      removeBtn.addEventListener("click", () => {
+        pendingImage = null;
+        fileInput.value = "";
+        filePreviewRow.style.display = "none";
+        filePreviewRow.innerHTML = "";
+      });
+      chip.appendChild(thumb);
+      chip.appendChild(name);
+      chip.appendChild(removeBtn);
+      filePreviewRow.appendChild(chip);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // --- Question posée par vocal (reconnaissance vocale du navigateur) ---
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  let listening = false;
+
+  if (SpeechRecognitionAPI) {
+    recognizer = new SpeechRecognitionAPI();
+    recognizer.lang = "fr-FR";
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    recognizer.addEventListener("result", (e) => {
+      const transcript = e.results[0][0].transcript;
+      input.value = (input.value ? input.value + " " : "") + transcript;
+      autoGrow();
+    });
+    recognizer.addEventListener("end", () => {
+      listening = false;
+      micBtn.classList.remove("mic-active");
+    });
+    recognizer.addEventListener("error", () => {
+      listening = false;
+      micBtn.classList.remove("mic-active");
+    });
+
+    micBtn.addEventListener("click", () => {
+      if (listening) {
+        recognizer.stop();
+        return;
+      }
+      try {
+        recognizer.start();
+        listening = true;
+        micBtn.classList.add("mic-active");
+      } catch (_) {}
+    });
+  } else {
+    micBtn.addEventListener("click", () => {
+      alert("La reconnaissance vocale n'est pas disponible sur ce navigateur. Essaie avec Chrome.");
+    });
+  }
 
   function autoGrow() {
     input.style.height = "auto";
@@ -183,12 +271,27 @@
   }
 
   async function sendMessage(text) {
-    if (busy || !text.trim()) return;
+    if (busy || (!text.trim() && !pendingImage)) return;
     busy = true;
     sendBtn.disabled = true;
 
-    addMessage("user", text);
+    const imageToSend = pendingImage;
+    addMessage("user", text || "(photo envoyée)");
+    if (imageToSend) {
+      const lastBubble = thread.lastElementChild.querySelector(".msg-bubble");
+      if (lastBubble) {
+        const thumb = document.createElement("img");
+        thumb.src = imageToSend;
+        thumb.className = "sent-photo-thumb";
+        lastBubble.appendChild(document.createElement("br"));
+        lastBubble.appendChild(thumb);
+      }
+    }
     input.value = "";
+    pendingImage = null;
+    fileInput.value = "";
+    filePreviewRow.style.display = "none";
+    filePreviewRow.innerHTML = "";
     autoGrow();
     addThinking();
 
@@ -196,7 +299,7 @@
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, visitorId, conversationId }),
+        body: JSON.stringify({ message: text, visitorId, conversationId, image: imageToSend }),
       });
       const data = await res.json();
       removeThinking();
@@ -231,13 +334,13 @@
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    sendMessage(input.value);
+    if (input.value.trim() || pendingImage) sendMessage(input.value);
   });
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage(input.value);
+      if (input.value.trim() || pendingImage) sendMessage(input.value);
     }
   });
 

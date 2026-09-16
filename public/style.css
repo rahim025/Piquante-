@@ -2272,6 +2272,21 @@ body {
     transition: background 0.15s ease, color 0.15s ease;
   }
   .attach-btn:hover { background: rgba(233,193,154,0.1); color: #f4a259; }
+  .attach-btn.mic-active {
+    color: #fff;
+    background: #c9531c;
+    animation: mic-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,83,28,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(201,83,28,0); }
+  }
+  .sent-photo-thumb {
+    max-width: 220px;
+    border-radius: 10px;
+    margin-top: 6px;
+    display: block;
+  }
 
   .file-preview-row {
     display: flex; gap: 8px; padding: 0 4px 8px; flex-wrap: wrap;
