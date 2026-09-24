@@ -1,0 +1,56 @@
+name: Build debug APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer les dépendances npm
+        run: npm install
+
+      - name: Installer le JDK (nécessaire pour Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Le dossier android/ n'est pas versionné : on le régénère à chaque build
+      # à partir de capacitor.config.json, pour ne pas polluer le dépôt avec du
+      # code généré. S'il existait déjà, on se contente de le synchroniser.
+      - name: Créer ou synchroniser le projet Android
+        run: | if [ -d "android" ]; then npx cap sync android else npx cap add android fi 
+      - name: Construire l'APK debug
+        run: | cd android chmod +x gradlew ./gradlew assembleDebug 
+      - name: Publier l'APK comme artefact du workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: piquant-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # En plus de l'artefact (temporaire, 90 jours), on crée une vraie Release
+      # GitHub avec l'APK en pièce jointe : c'est le lien stable à ouvrir depuis
+      # le téléphone (onglet "Releases" du dépôt) pour télécharger et installer.
+      - name: Publier une Release GitHub avec l'APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debug-${{ github.run_number }}
+          name: "Piquant IA — debug build #${{ github.run_number }}"
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
