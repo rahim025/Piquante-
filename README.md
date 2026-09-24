@@ -31,6 +31,30 @@ npm start
 
 Puis ouvre http://localhost:3000
 
+## Obtenir l'APK Android (debug, installable depuis GitHub)
+
+Ce dépôt contient une config Capacitor qui enveloppe le site en ligne dans une
+appli Android (comme une mini-app installable, mais qui affiche ton site).
+
+**Avant tout**, édite `capacitor.config.json` et remplace la valeur d'`url`
+par l'adresse de ton site déployé (celle donnée par Render, voir plus haut).
+Sans ça, l'appli s'ouvrira sur une page qui n'existe pas.
+
+Ensuite, à chaque `git push` sur `main`, un workflow GitHub Actions
+(`.github/workflows/build-debug-apk.yml`) construit automatiquement l'APK
+debug et le publie dans l'onglet **Releases** du dépôt.
+
+Pour l'installer sur un téléphone Android :
+1. Va dans l'onglet **Releases** du dépôt GitHub (sur ton téléphone, dans un
+   navigateur).
+2. Télécharge le fichier `app-debug.apk` de la dernière release.
+3. Ouvre-le : Android va demander d'autoriser l'installation depuis cette
+   source (à activer une seule fois dans les paramètres).
+4. L'appli "Piquant IA" s'installe et s'ouvre normalement.
+
+Cet APK debug n'est pas signé pour le Play Store — il sert à tester
+l'appli directement sur un téléphone, pas à la publier.
+
 ## Notes
 
 - L'historique de conversation est gardé en mémoire le temps que le serveur tourne (pas de base de données pour l'instant).

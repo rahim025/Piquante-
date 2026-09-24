@@ -1,0 +1,9 @@
+{
+  "appId": "com.batchabi.piquant",
+  "appName": "Piquant IA",
+  "webDir": "public",
+  "server": {
+    "url": "https://piquante-g9ow.onrender.com",
+    "cleartext": false
+  }
+}
