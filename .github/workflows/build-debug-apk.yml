@@ -30,6 +30,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Installer un keystore de debug fixe (empreinte SHA-1 stable pour Google Sign-In)
+        run: mkdir -p ~/.android && cp android-debug.keystore ~/.android/debug.keystore
+
       - name: Créer ou synchroniser le projet Android
         run: if [ -d "android" ]; then npx cap sync android; else npx cap add android; fi
 
