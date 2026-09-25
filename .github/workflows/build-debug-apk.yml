@@ -33,6 +33,9 @@ jobs:
       - name: Créer ou synchroniser le projet Android
         run: if [ -d "android" ]; then npx cap sync android; else npx cap add android; fi
 
+      - name: Générer l'icône de l'appli à partir de resources/icon.png
+        run: npx capacitor-assets generate --android
+
       - name: Construire l'APK debug
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
 
